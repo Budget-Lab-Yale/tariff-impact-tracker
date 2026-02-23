@@ -1,0 +1,77 @@
+nipa_line,pce_category,type,is_food_energy,direct_share,total_share
+10,Household appliances,durable,FALSE,0.3087825206049336,0.39510513045843493
+101,Higher education,NA,NA,0.0052967050948887475,0.00682760687297779
+102,"Nursery, elementary, and secondary schools",NA,NA,0.0036148193268375605,0.004659752853229492
+103,Commercial and vocational schools,NA,NA,0.0052967050948887475,0.00682760687297779
+104,Professional and other services,NA,NA,0.015493613154272307,0.10222215012616566
+105,Personal care and clothing services,NA,NA,5.454382193464826e-7,0.06981203151559175
+106,Social services and religious activities,NA,NA,5.4619191138368906e-5,0.010974441236564582
+107,Household maintenance,NA,NA,0.0016466799151833018,0.1307533569986011
+109,Foreign travel by U.S. residents,NA,NA,0.6619940592306967,0.6780243774048365
+11,"Glassware, tableware, and household utensils",durable,FALSE,0.13101617945615815,0.23122170403641804
+110,Less: Expenditures in the United States by nonresidents,NA,NA,0.9835183424039724,1
+111,Final consumption expenditures of nonprofit institutions serving households,NA,NA,0.0022201516007695804,0.03574477025345465
+12,Tools and equipment for house and garden,durable,FALSE,0.19565202232207196,0.3613233221353788
+14,"Video, audio, photographic, and information processing equipment and media",durable,FALSE,0.17166156105018535,0.24671168135140145
+15,"Sporting equipment, supplies, guns, and ammunition",durable,FALSE,0.17217160848343618,0.28183187933947595
+16,Sports and recreational vehicles,durable,FALSE,0.1820433860581705,0.28205100405150346
+17,Recreational books,durable,FALSE,0.007399087389985746,0.03087408188402601
+18,Musical instruments,durable,FALSE,0.2109785128412733,0.22558465033155112
+20,Jewelry and watches,durable,FALSE,0.21183817049737905,0.2584079073108428
+21,Therapeutic appliances and equipment,durable,FALSE,0.2068845079493171,0.24217055137599586
+22,Educational books,durable,FALSE,0.008462844021648262,0.039699452392134536
+23,Luggage and similar personal items,durable,FALSE,0.2939178634810676,0.3048930947017516
+24,Telephone and related communication equipment,durable,FALSE,0.38214847537615526,0.5270465180723748
+27,Food and nonalcoholic beverages purchased for off-premises consumption,nondurable,TRUE,0.0702040936300287,0.1267202838188882
+28,Alcoholic beverages purchased for off-premises consumption,nondurable,TRUE,0.06937790851639171,0.12165816337073775
+29,Food produced and consumed on farms,nondurable,TRUE,0.06854406234302239,0.14840744781367615
+32,Women's and girls' clothing,nondurable,FALSE,0.30214936876105686,0.31281042646059537
+33,Men's and boys' clothing,nondurable,FALSE,0.3054001291360413,0.3149085480851213
+34,Children's and infants' clothing,nondurable,FALSE,0.15828347719287866,0.23535217735710964
+35,Other clothing materials and footwear,nondurable,FALSE,0.30372692322601297,0.31491169167573185
+37,"Motor vehicle fuels, lubricants, and fluids",nondurable,TRUE,0.06497041255928922,0.13065569405125813
+38,Fuel oil and other fuels,nondurable,TRUE,0.06857151733660347,0.14037184887898382
+40,Pharmaceutical and other medical products,nondurable,FALSE,0.1856505048411222,0.5565173617352621
+41,Recreational items,nondurable,FALSE,0.11706045380199813,0.17213670355691885
+42,Household supplies,nondurable,FALSE,0.1714418545995422,0.3131248196682008
+43,Personal care products,nondurable,FALSE,0.2163583842806267,0.46420514583958145
+44,Tobacco,nondurable,FALSE,0.06937790851639171,0.12165816337073775
+45,"Magazines, newspapers, and stationery",nondurable,FALSE,0.027894728012303933,0.07962369566342412
+46,Net expenditures abroad by U.S. residents,NA,NA,0.9835183424039724,1
+5,New motor vehicles,durable,FALSE,0.25785952893697117,0.4219665824510047
+51,Rental of tenant-occupied nonfarm housing,NA,NA,0,0
+52,Imputed rental of owner-occupied nonfarm housing,NA,NA,0,0
+53,Rental value of farm dwellings,NA,NA,0,0
+54,Group housing,NA,NA,0,0.01635020574411826
+56,Water supply and sanitation,NA,NA,0.001944895435955023,0.0527845401115963
+58,Electricity,NA,NA,0.0029839938521814087,0.11516002455993593
+59,Natural gas,NA,NA,0.0029839938521814087,0.11516002455993593
+6,Net purchases of used motor vehicles,durable,FALSE,0.05680253396139811,0.1233531975289801
+62,Physician services,NA,NA,1.8056397351487636e-4,0.004991888579748148
+63,Dental services,NA,NA,1.8056397351487636e-4,0.004991888579748148
+64,Paramedical services,NA,NA,1.805010130319729e-4,0.005034904200360675
+66,Hospitals,NA,NA,0.006777768815862078,0.006782129243443679
+67,Nursing homes,NA,NA,2.471299874998204e-4,0.00936054109965118
+7,Motor vehicle parts and accessories,durable,FALSE,0.2054988705424552,0.32988108525973575
+70,Motor vehicle maintenance and repair,NA,NA,5.6143114327677224e-6,0.06955006872234751
+71,Other motor vehicle services,NA,NA,0,0.10591755985221167
+73,Ground transportation,NA,NA,3.1513948207970757e-4,0.025541281566436456
+74,Air transportation,NA,NA,0.18684347250463512,0.20605365100459547
+75,Water transportation,NA,NA,4.708507808809132e-5,0.0475580508592231
+77,"Membership clubs, sports centers, parks, theaters, and museums",NA,NA,0.005732150929518796,0.020514870555032334
+78,"Audio-video, photographic, and information processing equipment services",NA,NA,0.0037033740253060794,0.06742900115567461
+79,Gambling,NA,NA,3.0230072536661465e-5,0.004923539045739463
+80,Other recreational services,NA,NA,0.022634124728347072,0.21001272692832285
+83,Purchased meals and beverages,NA,NA,3.7641319542903957e-4,0.035742123570475313
+84,Food furnished to employees,NA,NA,0.07000967443781017,0.12461008237332141
+85,Accommodations,NA,NA,0,0.01635020574411826
+88,Financial services furnished without payment,NA,NA,0.0030253741675007983,0.07628362203271946
+89,"Financial service charges, fees, and commissions",NA,NA,0.0017698076801282551,0.0787625371583734
+9,Furniture and furnishings,durable,FALSE,0.18202473894213383,0.2335687380579514
+91,Life insurance,NA,NA,0.05840361848439173,0.20604146493393283
+92,Net household insurance,NA,NA,0.05840361848439173,0.20604146493393283
+93,Net health insurance,NA,NA,0.05840361848439173,0.20604146493393283
+94,Net motor vehicle and other transportation insurance,NA,NA,0.05840361848439173,0.20604146493393283
+97,Telecommunication services,NA,NA,1.7217594637672517e-4,0.038143654323449926
+98,Postal and delivery services,NA,NA,0.001145605331222308,0.055261263543870384
+99,Internet access,NA,NA,1.7149327771570955e-4,0.038099563819752595

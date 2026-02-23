@@ -1,0 +1,52 @@
+# R
+.Rhistory
+.Rdata
+.RData
+.Ruserdata
+.Rproj.user/
+.Renviron
+
+# Output files (regenerated from report knit)
+# NOTE: output/*.csv is NOT ignored -- those CSVs serve as Haver API caches
+# and are required for the pipeline to run without Haver access.
+output/*.html
+output/*.xlsx
+output/*.docx
+# Publication outputs ARE tracked (output/publication/)
+
+# Logs
+logs/*.log
+R/logs/
+
+# LaTeX build artifacts
+*.aux
+*.toc
+
+# OS files
+.DS_Store
+Thumbs.db
+nul
+
+# IDE
+.vscode/
+*.swp
+
+# Credentials and tokens
+input/usitc_api_token.txt
+
+# Superseded input files
+input/old_calc/
+input/ancillary/
+
+# Claude Code configuration (local workflow)
+.claude/
+CLAUDE.md
+quality_reports/
+
+# Python artifacts
+__pycache__/
+*.pyc
+
+# Temporary/scratch files
+input/Book*.xlsx
+*.tmp

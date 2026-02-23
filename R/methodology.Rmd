@@ -1,0 +1,214 @@
+---
+title: "Methodological Appendix For Tracking the Economic Effects of Tariffs"
+author: "The Budget Lab at Yale"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+  pdf_document:
+    toc: true
+  word_document:
+    toc: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE
+)
+
+library(dplyr)
+library(readr)
+library(lubridate)
+library(here)
+
+# Detect output format
+is_word <- !is.null(knitr::pandoc_to()) && knitr::pandoc_to() == "docx"
+
+# Cross-document link placeholder (XXXX in Word, descriptive text in HTML/PDF)
+report_text <- "report"
+report_link <- "https://budgetlab.yale.edu/research/tracking-economic-effects-tariffs"
+
+# For Word output, preserve raw LaTeX instead of converting to Word equations.
+# The downstream processor expects raw TeX code.
+if (is_word) {
+  knitr::knit_hooks$set(document = function(x) {
+    # Display math: $$...$$ → code-fenced \begin{equation}...\end{equation}
+    x <- gsub("\\$\\$(.*?)\\$\\$",
+              "\n~~~\n\\\\begin{equation}\n\\1\n\\\\end{equation}\n~~~\n",
+              x, perl = TRUE)
+    # Inline math: $...$ → backtick-wrapped \(...\)
+    x <- gsub("(?<!\\$)\\$([^$\n]+?)\\$(?!\\$)",
+              "`\\\\(\\1\\\\)`",
+              x, perl = TRUE)
+    x
+  })
+}
+
+here::i_am("R/methodology.Rmd")
+OUTPUT_DIR <- here("output")
+
+# Source shared utility functions
+source(here("R", "utils.R"))
+
+# Load IPI effective shares (for inline import share numbers)
+ipi_shares_file <- file.path(OUTPUT_DIR, "ipi_effective_shares.csv")
+ipi_available <- file.exists(ipi_shares_file)
+if (ipi_available) {
+  ipi_eff_shares <- read_csv(ipi_shares_file, show_col_types = FALSE)
+  IMPORT_SHARE_CORE_GOODS <- ipi_eff_shares$effective_import_share[ipi_eff_shares$variant == "core_goods"]
+  IMPORT_SHARE_DURABLES <- ipi_eff_shares$effective_import_share[ipi_eff_shares$variant == "durables"]
+} else {
+  IMPORT_SHARE_CORE_GOODS <- 0.25
+  IMPORT_SHARE_DURABLES <- 0.30
+}
+
+# Pre-2025 baseline: post-COVID (2022-2024) average effective tariff rate
+tariff_revenue <- read_csv(file.path(OUTPUT_DIR, "tariff_revenue.csv"), show_col_types = FALSE)
+BASELINE_TARIFF_RATE <- tariff_revenue %>%
+  filter(year >= 2022, year <= 2024) %>%
+  summarize(rate = mean(effective_rate, na.rm = TRUE) / 100) %>%
+  pull(rate)
+
+```
+
+# Introduction
+
+The Budget Lab at Yale's *Tracking the Economic Effects of Tariffs* (`r report_link`) monitors how the 2025 tariff policies are affecting the US economy. That report presents regularly updated figures on customs revenue, consumer prices, import prices, trade flows, exchange rates, and employment in tariff-exposed industries. This methodological appendix documents the analytical choices behind those figures: how we estimate pre-2025 trends, construct import-weighted price indices, and calculate implied passthrough rates. Each section below corresponds to a method referenced in the main report.
+
+# Trend Estimation
+
+Two approaches are used for trend estimation in this report, depending on the context.
+
+## Simple Linear Trend (Primary Method)
+
+Most figures use a simple linear trend estimated via ordinary least squares (OLS) on the 2023--2024 period:
+
+$$y_t = \alpha + \beta \cdot t + \varepsilon_t$$
+
+where $y_t$ is the indexed series (Dec 2024 = 100) and $t$ represents the unit of time (monthly in our context). The trend line is extrapolated forward to provide a baseline for comparison with post-2025 actual values. This simple approach is transparent and requires minimal assumptions.
+
+**Figures using simple linear trend:** Import Prices (Figure 7), Tariff-Exposed Employment Index (Figure 8), Manufacturing Tariff-Exposed Employment Index (Figure 9), Industrial Production (Figure 10), Trade Flows (Figures 12--13), and Appendix Figures A1 and A2. 
+
+## Local Projection Trend (PCE Price Indices)
+
+For the PCE price indices in Figures 3--6, we use a local projection (LP) approach with recession and pandemic controls. For each forecast horizon $h = 0, 1, \ldots, H$ (with $H = 24$ months), a separate regression is estimated:
+
+$$\ln(y_{t+h}) - \ln(y_t) = \alpha_h + \sum_{i=1}^{p} \beta_{h,i} \ln(y_{t-i}) + \gamma_h^R R_t + \gamma_h^P P_t + \varepsilon_{t+h}$$
+
+where:
+
+- $y_t$ is the indexed price series (Dec 2024 = 100)
+- $H = 24$ months (maximum forecast horizon)
+- $p = 12$ autoregressive lags
+- $R_t$ is a National Bureau of Economic Research (NBER) recession dummy (2001, 2007--2009, 2020 recessions)
+- $P_t$ is a pandemic dummy (Jan 2020--Sep 2022)
+
+**Key properties:**
+
+1. **Horizon-specific regressions**: Each horizon $h$ is a separate regression, allowing the data-generating process to differ across forecast lengths
+2. **Newey-West HAC (heteroskedasticity and autocorrelation consistent) standard errors**: Standard errors account for serial correlation induced by overlapping residuals
+3. **Growing confidence intervals**: LP bands widen with the forecast horizon, reflecting increased forecast uncertainty over time
+4. **Recession and pandemic controls**: The indicator variables prevent structural breaks from distorting the estimated trend
+
+**Confidence intervals** are computed as: $\text{CI}_h = \hat{y}_{t+h} \pm z \times \text{se}_h^{NW}$, where $z = 1.645$ for 90% confidence.
+
+The estimation period for LP models is April 1996 through December 2024.
+
+# Imported PCE Goods Price Index (IPI) (Figures 5--6)
+
+The Imported PCE Goods Price Index (IPI) reweights the Bureau of Economic Analysis's (BEA) published PCE component price indices by the *direct* import share of each component. Rather than weighting each goods category by its share of total consumer spending (as the standard PCE price index does), this index weights each category by the share of its final use that is directly imported.
+
+Construction proceeds in five steps:
+
+1. **Commodity-level direct import shares** are computed from the BEA Import Matrix and Use of Commodities tables: $s_c = \text{Imports}_c / \text{Total Use}_c$, where $\text{Imports}_c$ is the value of commodity $c$ directly imported (from the BEA Import Matrix) and $\text{Total Use}_c$ is total domestic use of commodity $c$, including both domestically produced and imported supply (from the BEA Use of Commodities table).
+2. **PCE-category import shares** are computed by mapping commodity-level shares through the BEA PCE Bridge Table, weighting by purchasers' value: $s_k = \sum_c s_c \times V_{c,k} / \sum_c V_{c,k}$.
+3. **Import-weighted expenditures** are computed monthly as $IW_{k,t} = s_k \times E_{k,t}$, with a 2-month moving average.
+4. **Normalized weights** sum to 1 each month: $w_{k,t} = IW_{k,t} / \sum_j IW_{j,t}$.
+5. **The index** is $I_t = \sum_k w_{k,t} \times P_{k,t}$, rebased to Dec 2024 = 100, where $P_{k,t}$ is the BEA's published PCE price index for category $k$ at time $t$.
+
+Three variants are produced: all goods, core goods (excluding food and energy), and durables only.
+
+**Why direct import shares rather than total import content?** The IPI weights each PCE category by its direct import share $s_k$, not by the total (Leontief-based) import content $\tilde{s}_k$ described in the next section. This is because the BEA's published PCE price indices $P_{k,t}$ already reflect the cost of imported intermediates through the supply chain. For example, the PCE price of motor vehicles already embeds the cost of imported steel, semiconductors, and other components used in domestic assembly. Weighting by total import content would overstate the import sensitivity of the index, because the indirect import channel is already priced into $P_{k,t}$---albeit attenuated by domestic value-added, markups, and substitution along the supply chain. Direct import shares isolate the portion of each category whose prices move most directly with import prices.
+
+By contrast, the total import content shares $\tilde{s}_c$ (computed via the Leontief inverse, described below) are used in the *passthrough calculation*, where the question is different: given a tariff increase, what is the expected total price effect on consumer goods? There, the full import content---direct and indirect---is the appropriate scaling factor.
+
+# Total Import Content Shares
+
+The passthrough tables require an estimate of the fraction of consumer spending that ultimately originates as imports. A naive approach would use only *direct* import shares---the share of each commodity's final use that is directly imported. However, this misses the import content embedded in domestically produced goods through their supply chains. For example, a US-assembled automobile contains imported steel, semiconductors, and other components; the direct import share of "motor vehicles" captures only finished imported vehicles, not the imported content of domestically assembled ones.
+
+Following the methodology of [Hale, Hobijn, and Ring (2025)](https://www.frbsf.org/research-and-insights/publications/economic-letter/2025/05/how-much-do-we-import-what-it-means-for-tariffs/), we compute *total* import content shares that account for all rounds of intermediate production. The approach uses the BEA's Commodity-by-Commodity Total Requirements table---the Leontief inverse matrix $\mathbf{R} = (\mathbf{I} - \mathbf{A})^{-1}$, where $\mathbf{A}$ is the direct requirements (technical coefficients) matrix. Entry $R_{cj}$ gives the total amount of commodity $j$ required, directly and indirectly through the entire supply chain, to deliver one dollar of commodity $c$ to final demand.
+
+Total import content for commodity $c$ is then:
+
+$$\tilde{s}_c = \sum_j R_{cj} \times s_j$$
+
+where $s_j$ is the direct import share of commodity $j$ (the same quantity as $s_c$ defined above, indexed over $j$ rather than $c$). This captures imports at every tier of the supply chain: direct imports of finished goods, imports used as inputs to domestic production, imports used as inputs to *those* inputs, and so on through all rounds. The Leontief inverse computes this infinite sum exactly.
+
+These commodity-level total import content shares are then mapped to PCE categories via the BEA PCE Bridge Table (the same mapping used for direct shares), yielding $\tilde{s}_k$ for each PCE category $k$. These are aggregated to variant-level (all goods, core goods, and durable goods) shares by weighting each PCE category by its expenditure $E_k$:
+
+$$\bar{s}_{\text{variant}} = \frac{\sum_{k \in \text{variant}} \tilde{s}_k \times E_k}{\sum_{k \in \text{variant}} E_k}$$
+
+Using 2024 BEA Input-Output tables, the resulting total import content shares are `r sprintf("%.1f%%", IMPORT_SHARE_CORE_GOODS * 100)` for core goods and `r sprintf("%.1f%%", IMPORT_SHARE_DURABLES * 100)` for durables---substantially higher than the direct-only shares of `r if (ipi_available) sprintf("%.1f%%", ipi_eff_shares$direct_import_share[ipi_eff_shares$variant == "core_goods"] * 100) else "N/A"` and `r if (ipi_available) sprintf("%.1f%%", ipi_eff_shares$direct_import_share[ipi_eff_shares$variant == "durables"] * 100) else "N/A"`, respectively. The difference reflects the substantial indirect import content in goods like pharmaceuticals (18.6% direct, 55.7% total), motor vehicles (25.8% direct, 42.2% total), and personal care products (21.6% direct, 46.4% total).
+
+# Consumer Passthrough Calculation
+
+Implied consumer passthrough is calculated as:
+
+$$\text{Passthrough}_t = \frac{\text{Price Deviation from Trend}_t}{\bar{s}_{\text{variant}} \times \Delta\text{Tariff Rate}_t}$$
+
+where $\bar{s}_{\text{variant}}$ is the total import content share for the relevant variant (`r sprintf("%.1f%%", IMPORT_SHARE_CORE_GOODS * 100)` for core goods, `r sprintf("%.1f%%", IMPORT_SHARE_DURABLES * 100)` for durables), and $\Delta\text{Tariff Rate}_t$ is the change in the effective tariff rate as of period $t$ from the `r sprintf("%.1f%%", BASELINE_TARIFF_RATE * 100)` baseline (2022--2024 average). The import content shares are computed from 2024 BEA Input-Output tables using the Leontief inverse methodology described above.
+
+Tables 1 and 2 report passthrough estimates using three trend methods:
+
+1. **LP (Local Projection)**: Price deviation from LP trend with recession/pandemic controls (1996--2024 estimation period)
+2. **Log-Linear**: Price deviation from simple log-linear trend fit to 2023--2024 data
+3. **Simple**: Raw year-to-date price change with no trend adjustment (lower-bound estimate)
+
+# Tariff-Exposed Employment Index (Figures 8--9)
+
+The tariff-exposed employment index measures how much of an industry's employment is "exposed" to tariff changes through its reliance on imported intermediate inputs. The index uses Leontief-adjusted (total requirements) weights to capture tariff cost pressure at every tier of the supply chain:
+
+$$I_t = \sum_j E_{j,t} \times w_{j,t}$$
+
+where the industry weight $w_{j,t}$ is:
+
+$$w_{j,t} = \sum_c \tau_{c,t} \times R_{c,j} \times s_c$$
+
+and:
+
+- $E_{j,t}$ is employment of industry $j$ at time $t$ (Bureau of Labor Statistics (BLS) via Haver Analytics)
+- $\tau_{c,t}$ is the effective tariff rate for commodity $c$ at time $t$ (U.S. International Trade Commission (USITC) data, mapped from NAICS to BEA commodity codes). Tariff rates are updated monthly to reflect the prevailing tariff regime.
+- $R_{c,j}$ is the total requirement of commodity $c$ per dollar of commodity $j$'s output, from the BEA Commodity-by-Commodity Total Requirements table (the Leontief inverse $\mathbf{R} = (\mathbf{I} - \mathbf{A})^{-1}$). This matrix captures all rounds of intermediate production: direct inputs, inputs to those inputs, and so on.
+- $s_c$ is the direct import share of commodity $c$, computed as imports divided by total domestic use from the BEA Import Matrix and Use of Commodities tables (the same quantity described in the Total Import Content Shares section above).
+
+The product $\tau_{c,t} \times R_{c,j} \times s_c$ captures the tariff cost pressure that commodity $c$ exerts on industry $j$ through the entire supply chain at time $t$. Summing over all commodities gives the total tariff-related cost pressure per dollar of industry $j$'s output. Note that $y_j$ (industry output) does not appear in the formula because $R_{c,j}$ already normalizes per dollar of output.
+
+**Why Leontief-adjusted rather than direct imports?** Unlike the IPI---where BEA's published PCE price indices already embed the cost of imported intermediates through the supply chain---the employment index weights a headcount measure that has no "already embedded" channel. If industry $j$ faces higher input costs from upstream tariffs, its employment response depends on the *total* tariff cost pressure it faces, not just the tariffs on goods it directly imports. For example, a US auto assembly plant that buys domestically produced steel is still affected by steel tariffs, even though it does not directly import steel. The Leontief approach captures this indirect exposure. In matrix notation, the full weight vector is $\mathbf{w}_t = \mathbf{R}^\top (\boldsymbol{\tau}_t \odot \mathbf{s})$.
+
+This index is calculated for all non-farm industries and for manufacturing only. A simple linear trend (2023--2024 estimation period) is plotted alongside the index to provide a pre-tariff baseline.
+
+
+# References
+
+Cavallo, Alberto, Paola Llamas, and Franco M. Vazquez (2026). "Tracking the Short-Run Price Impact of U.S. Tariffs". Working Paper. [https://www.pricinglab.org/tariff-tracker/](https://www.pricinglab.org/tariff-tracker/)
+
+Congressional Budget Office (2022). "The Budget and Economic Outlook: 2022 to 2032." CBO Publication 58549. [https://www.cbo.gov/publication/58549](https://www.cbo.gov/publication/58549)
+
+Flaaen, A., A. Hortaçsu, and F. Tintelnot (2020). "The Production Relocation and Price Effects of US Trade Policy: The Case of Washing Machines." *American Economic Review*, 110(7), 2103-2127. [https://doi.org/10.1257/aer.20190611](https://doi.org/10.1257/aer.20190611)
+
+Hale, G., B. Hobijn, and P. Ring (2025). "How Much Do We Import? What It Means for Tariffs." *FRBSF Economic Letter*, 2025-13. [https://www.frbsf.org/research-and-insights/publications/economic-letter/2025/05/how-much-do-we-import-what-it-means-for-tariffs/](https://www.frbsf.org/research-and-insights/publications/economic-letter/2025/05/how-much-do-we-import-what-it-means-for-tariffs/)
+
+Jord&agrave;, &Ograve;. (2005). "Estimation and Inference of Impulse Responses by Local Projections." *American Economic Review*, 95(1), 161-182.
+
+Newey, W.K. and K.D. West (1987). "A Simple, Positive Semi-definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix." *Econometrica*, 55(3), 703-708.
+
+U.S. International Trade Commission (2023). "Economic Impact of Trade Agreements Implemented Under Trade Authorities Procedures, 2023 Report." USITC Publication 5405. [https://www.usitc.gov/publications/332/pub5405.pdf](https://www.usitc.gov/publications/332/pub5405.pdf)
+
+---
+
+*Document generated on `r Sys.time()` using R `r R.version.string`*
