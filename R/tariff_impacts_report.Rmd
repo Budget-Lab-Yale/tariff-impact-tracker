@@ -42,7 +42,7 @@ library(patchwork) # Multi-panel figures
 is_word <- !is.null(knitr::pandoc_to()) && knitr::pandoc_to() == "docx"
 
 # Cross-document link placeholder (URL in Word, descriptive text in HTML/PDF)
-meth_text <- "accompanying Methodology document"
+meth_text <- "accompanying Methodology page"
 meth_link <- "https://budgetlab.yale.edu/research/methodological-appendix-tracking-economic-effects-tariffs" 
 
 
@@ -724,6 +724,7 @@ if (ipi_available) {
 
 ## Key Takeaways
 
+- **Updated economic indicators:** This report reviews economic indicators that are related to the effect of Tariffs on the US Economy as of `r format_date_long()`. For the most part, given data lags, the findings reflect the conditions prior to the SCOTUS decision repealing IEEPA Tariffs on February 20th, 2026.  
 - **Tariff revenue:** The 2025 tariffs have raised an estimated $`r safe_fmt(total_excess_rev)` billion in inflation-adjusted customs revenue above the 2022--2024 average as of `r latest_month_name`, with the effective tariff rate reaching `r safe_fmt(latest_tariff_rate)`% in `r latest_tariff_month`.
 - **Pass-through to consumer prices:** Imported PCE core goods and durable goods prices have risen `r safe_fmt(tk_ipi_ytd_core)`% and `r safe_fmt(tk_ipi_ytd_dur)`% respectively during 2025 through `r data_month_name`, both well above prior-year comparisons. Implied passthrough of tariffs to imported consumer goods prices ranges from roughly `r safe_fmt(tk_ipi_core_low, "%.0f")`--`r safe_fmt(tk_ipi_core_high, "%.0f")`% for core goods and `r safe_fmt(tk_ipi_dur_low, "%.0f")`--`r safe_fmt(tk_ipi_dur_high, "%.0f")`% for durables, depending on methodology (see Tables 1a--1b).
 - **Employment:** There is no definitive indication of a significant aggregate labor market effect so far, though tariff-exposed industries show some signs of weakness relative to pre-2025 trend.
@@ -736,14 +737,14 @@ In response to new tariff announcements, The Budget Lab (TBL) regularly estimate
 
 One year after the initial wave of new tariffs, this report updates a [September 2025](https://budgetlab.yale.edu/research/short-run-effects-2025-tariffs-so-far) assessment of how actual economic indicators have responded to tariff changes. This provides a check on the assumptions made by economic models, as well as a real-time assessment of how tariffs are impacting the US economy. Most of these indicators are updated monthly, and going forward this report will be released on that same schedule. In particular, we consider the impact of tariffs on revenues, prices, trade, and labor markets. Critically, these are not causal estimates of the effect of tariffs on the economy, but rather constitute a descriptive attempt to explore how the economy is changing with tariffs. There are a number of other economic changes happening concurrently, including but not limited to the growth of generative AI and the passage of the One Big Beautiful Bill Act, which we do not control for in the series presented below. This report was updated using data as of `r format_date_long()`.
 
-Overall, there is evidence, consistent with economic theory, that tariffs have raised both additional revenue ($`r safe_fmt(total_excess_rev)` Billion above the 2022--2024 average) and led to higher prices (Personal Consumption Expenditure (PCE) core goods up `r safe_fmt(core_ytd_change)`% during 2025 through `r data_month_name`). There is less clear evidence about the impacts of tariffs on the wider economy: for example, employment in tariff-exposed industries is not appreciably lower or higher than what would have been expected prior to 2025. Importantly, these statistics are representations of the current economy, and it is difficult to disentangle what changed due to tariffs versus the many other economic changes over the past year. It is still early and the effects of tariffs may evolve and change over time as consumers, businesses, and policymakers respond.
+Overall, there is evidence, consistent with economic theory, that tariffs have raised both additional revenue ($`r safe_fmt(total_excess_rev)` Billion above the 2022--2024 average) and led to higher prices (Personal Consumption Expenditure (PCE) core goods up `r safe_fmt(core_ytd_change)`% during 2025 through `r data_month_name`). There is less clear evidence about the impacts of tariffs on the wider economy: for example, employment in tariff-exposed industries is not appreciably lower or higher than what would have been expected prior to 2025. Importantly, these statistics are representations of the current economy, and it is difficult to disentangle what changed due to tariffs versus the many other economic changes over the past year. It is still early and the effects of tariffs may evolve and change over time as consumers, businesses, and policymakers respond. Importantly, with the exception of currency data, we do not yet have outcomes that reflect the economic reality after the Supreme Court decision rolling back the President's authority to use the International Emergency Economic Powers Act (IEEPA) to impose tariffs.
 
 
 ## Revenues & Effective Tariff Rates
 
 Tariffs are a tax on imports, therefore higher tariffs will increase revenues if their effect on imports is not sufficiently prohibitive. Before the 2025 tariff announcements, the average effective US tariff rate was `r safe_fmt(pre_2025_tariff_rate)`% (2022--2024 average), raising $`r safe_fmt(pre_2025_monthly_rev)` billion a month in net customs duty revenues. The new 2025 tariffs have pushed the average effective US rate to `r safe_fmt(latest_tariff_rate)`%, and have raised roughly $`r safe_fmt(total_excess_rev)` billion in revenues so far (after accounting for the 2022--2024 average), with $`r safe_fmt(excess_rev_2025_only)` billion collected over the course of 2025 and about $`r safe_fmt(latest_month_rev)` billion of that new tariff revenue posted in `r latest_month_name` alone. 
 
-However, the revenue landscape has shifted significantly. On February 20th, 2026, the Supreme Court ruled 6--3 in *Learning Resources, Inc. v. Trump* that the use of the International Emergency Economic Powers Act (IEEPA) to impose tariffs exceeded presidential authority, striking down all IEEPA-based tariffs---including the reciprocal, fentanyl, and universal baseline tariff regimes. Tariffs imposed using other authorities remain in effect. Critically, the Court remanded the question of refunds on previously collected IEEPA tariff revenue to the Court of International Trade, meaning that some or all of the IEEPA revenue collected to date may ultimately be returned to importers. Our back-of-the-envelope estimate, projecting forward using the average of observed FY 2026 CBP collections as of December 14th (the same methodology behind our earlier \$142 billion figure), puts total IEEPA revenue at roughly \$168 billion through February 19th, 2026. The customs revenue data presented in this report do not yet cover the post-SCOTUS period, and substantial uncertainty remains: the ultimate fiscal impact will depend on the resolution of refund litigation, the duration and scope of the replacement Section 122 tariffs, and any further legislative or executive action. 
+However, the revenue landscape has shifted significantly. On February 20th, 2026, the Supreme Court ruled 6--3 in *Learning Resources, Inc. v. Trump* that the use of IEEPA to impose tariffs exceeded presidential authority, striking down all IEEPA-based tariffs---including the reciprocal, fentanyl, and universal baseline tariff regimes. Tariffs imposed using other authorities remain in effect, and the questions of legality and implementation of IEEPA refunds remains uncertain. This means that some or all of the IEEPA revenue collected to date may ultimately be returned to importers. Our back-of-the-envelope estimate, projecting forward using the average of observed FY 2026 CBP collections as of December 14th (the same methodology behind our earlier \$142 billion figure), puts total IEEPA revenue at roughly \$168 billion through February 19th, 2026. The customs revenue data presented in this report do not yet cover the post-SCOTUS period, and substantial uncertainty remains: the ultimate fiscal impact will depend on the resolution of refund litigation, the duration and scope of the replacement Section 122 tariffs, and any further legislative or executive action. 
 
 The tariff revenue and rate numbers reported here are a different measure than the numbers reported in TBL's State of Tariff Report. The effective tariff rates (ETRs) reported here are actual tariff duties divided by the value of customs, meaning that they incorporate any avoidance behavior by firms, importers, or other actors. The effective tariff rates reported in TBL's State of Tariff Report are model-based estimates of the average rates across sectors, weighted by 2024 trade flows. In that report, we include two measures of average ETRs: pre-substitution and post-substitution. In our modeling of the general revenue effects of tariffs, our last pre-SCOTUS estimate of tariff revenue was projected to raise \$246 billion in annual revenue for fiscal year (FY) 2026 (conventionally). This is lower than the annualized revenue we would expect if monthly tariff revenue remained at its current level (2-month average of `r annualized_rev_months` projected forward) for the rest of the fiscal year ($`r safe_fmt(annualized_rev, "%.0f")` billion). However, the revenue estimates in the State of Tariff Report account for decreases in other revenue sources, like federal payroll and corporate income taxes, following the methodology of the [U.S. Congressional Budget Office](https://www.cbo.gov/publication/58549). Adjusting for that gives us a simulated annual revenue of \$319 billion, notably closer to the annualized tariff revenue level suggested by the customs data. 
 
@@ -854,7 +855,7 @@ latest_pce_date <- format(max(core_early_trend$date), "%B")
 
 One possible indication that tariffs are raising consumer goods prices is that goods prices have increased since the beginning of the year, both in absolute terms and against reasonable estimates of pre-2025 trend. We estimate the pre-2025 trend using a local projection method with recession and pandemic controls. See the [`r meth_text`](`r meth_link`) for full details. We find similar differences when the trend is calculated using a simple log-linear approach. During 2025 through `r data_month_name`, PCE core goods prices (goods excluding volatile food & energy components) rose `r safe_fmt(core_ytd_change)`%, versus `r safe_fmt(core_2023_change)`% over the same `r months_since_2025`-month period starting in 2023. The difference is even starker with PCE durable goods prices, which rose `r safe_fmt(dur_ytd_change)`%, versus `r safe_fmt(dur_2023_change)`% over the same period starting in 2023. Core goods and durable goods were `r safe_fmt(latest_core_dev)`% and `r safe_fmt(latest_dur_dev)`% above TBL's estimate of pre-2025 trend in `r latest_pce_date`.
 
-Versions of Figures 3 and 4 using the log-linear trend approach are included in the [Appendix](#appendix).
+Versions of Figures 3 and 4 using the log-linear trend approach are included in the [Appendix below](#appendix).
 
 ```{r fig-pce-goods}
 # Reuse LP trend results from compute-trend-deviations chunk (identical parameters)
@@ -1418,7 +1419,7 @@ In [November 2025](https://budgetlab.yale.edu/research/state-us-tariffs-november
 
 We estimate the rise in imported core goods and durable prices in three ways. The first, and our preferred approach, uses the trend estimates reported in Figure 5 as the counterfactual level of prices but-for tariffs. The second approach uses data from 2023-2024 to project forward pre-2025 prices. The third approach moves away from relying on estimating trends, and rather assumes that prices would have remained at their December 2024 level. It therefore uses the change in prices during 2025 through `r data_month_name`. We think that this approach underestimates true price increases from the tariffs by ignoring counterfactuals, but provides an easy lower-bound estimate.
 
-The results of each are shown below, with one table for June 2025 and one for the most recent month of data, `r data_month`. Tables 1a and 1b use these category-specific tariff rates rather than the economy-wide effective rate, since the tariff burden varies across consumer goods categories. Passthrough tables using overall PCE prices (as opposed to the imported goods) are available in the [Appendix](#appendix).
+The results of each are shown below, with one table for June 2025 and one for the most recent month of data, `r data_month`. Tables 1a and 1b use these category-specific tariff rates rather than the economy-wide effective rate, since the tariff burden varies across consumer goods categories. Passthrough tables using overall PCE prices (as opposed to the imported goods) are available in the [Appendix below](#appendix).
 
 Using our preferred LP trend method, the implied passthrough of tariffs to imported core goods prices through `r data_month` is `r fmt_pt(ipi_pt_core_lp)`, and the implied passthrough to imported durables prices is `r fmt_pt(ipi_pt_dur_lp)`. The larger durable passthrough rate is due both to a lower import share and a more aggressive pre-2025 downward trend in prices.  The simpler log-linear trend yields very similar passthrough estimates of `r fmt_pt(ipi_pt_core_ll)` for core goods and `r fmt_pt(ipi_pt_dur_ll)` for durables. The most conservative method---raw price changes during 2025 through `r data_month_name` with no trend adjustment---gives `r fmt_pt(ipi_pt_core_simple)` and `r fmt_pt(ipi_pt_dur_simple)` for core goods and durables, respectively. All in all, the story is fairly consistent for imported core goods, with somewhere between `r fmt_pt(min(ipi_pt_core_simple, ipi_pt_core_lp, ipi_pt_core_ll, na.rm = TRUE))` and `r fmt_pt(max(ipi_pt_core_simple, ipi_pt_core_lp, ipi_pt_core_ll, na.rm = TRUE))` passthrough of tariffs. The story is more mixed for durable goods, due primarily to the uncertainty around the counterfactual level of prices but for tariffs. At the June 2025 mark, the LP passthrough estimates were `r fmt_pt(ipi_pt_core_lp_jun)` for core goods and `r fmt_pt(ipi_pt_dur_lp_jun)` for durables. The estimates of passthrough of imported core goods have remained relatively constant over time, but implied passthrough of durable goods has now reached over 100 percent, versus `r fmt_pt(ipi_pt_dur_simple_jun)`--`r fmt_pt(ipi_pt_dur_ll_jun)` in June 2025. These estimates of passthrough are larger than those found by other researchers, but not unreasonably so. For example, [Cavallo, Llamas, and Vazquez (2026)](https://www.pricinglab.org/files/TrackingTariffs_Cavallo_Llamas_Vazquez.pdf) estimate that the passthrough to retail prices was 24 percent in October 2025. 
 
@@ -1773,7 +1774,7 @@ cat("*Manufacturing employment index not available. Run employment_index.R with 
 
 ```{r compute-ip-stats, include=FALSE}
 # Pre-compute industrial production stats for inline text
-ip_base_val <- get_base_value(industrial_production, "ip_manufacturing", get_base_date(industrial_production, "date"))
+ip_base_val <- get_base_value(industrial_production, "ip_manufacturing", as.Date("2024-12-01"))
 ip_latest <- industrial_production %>% filter(!is.na(ip_manufacturing)) %>% filter(date == max(date))
 ip_ytd_pct <- (ip_latest$ip_manufacturing / ip_base_val - 1) * 100
 ip_month_name <- format(ip_latest$date, "%B")
@@ -1782,9 +1783,8 @@ ip_month_name <- format(ip_latest$date, "%B")
 Building on the analysis of tariff-sensitive manufacturing employment above, we also consider the evolution of industrial production in this same sector. The manufacturing industrial production index is constructed by the Federal Reserve Board and measures real output of manufacturing industries. We plot the index from 2021 onward, and find that during 2025 through `r ip_month_name`, the index has changed by `r safe_fmt(ip_ytd_pct, "%+.1f")`%, though it is worth noting it is possible this is due to mean-reversion rather than to any tariff-related effect. In this case, the 2-year pre-trend plotted below may not be the appropriate counterfactual. 
 
 ```{r fig-industrial-prod}
-# Get base date dynamically
-ip_base_date <- get_base_date(industrial_production, "date")
-dec_base_ip <- get_base_value(industrial_production, "ip_manufacturing", ip_base_date)
+# Base date: December 2024 = 100
+dec_base_ip <- get_base_value(industrial_production, "ip_manufacturing", as.Date("2024-12-01"))
 
 ip_indexed <- industrial_production %>%
   filter(date >= "2021-01-01") %>%
@@ -2404,8 +2404,8 @@ add_tbl_sheet(wb, "F3", fig3_data,
 fig4_data <- pce_for_fig4 %>%
   filter(date >= "2024-12-01") %>%
   dplyr::select("Date" = date, 
-                "Core goods deviation from trend (pp)" = core_goods_vs_trend, 
-                "Durable goods deviation from trend (pp)" = dur_vs_trend)
+                "Core goods deviation from trend (%)" = core_goods_vs_trend,
+                "Durable goods deviation from trend (%)" = dur_vs_trend)
 add_tbl_sheet(wb, "F4", fig4_data,
   title    = fig_excel_title("F4"),
   subtitle = fig_meta("F4", "subtitle"),
@@ -2512,8 +2512,8 @@ if (ipi_available && exists("ipi_combined")) {
   fig6_data <- ipi_for_fig6 %>%
     filter(date >= "2024-12-01") %>%
     dplyr::select("Date" = date,
-           "Imported core goods deviation from trend (pp)" = core_goods_vs_trend,
-           "Imported durables deviation from trend (pp)" = durables_vs_trend)
+           "Imported core goods deviation from trend (%)" = core_goods_vs_trend,
+           "Imported durables deviation from trend (%)" = durables_vs_trend)
   add_tbl_sheet(wb, "F6", fig6_data,
     title    = fig_excel_title("F6"),
     subtitle = fig_meta("F6", "subtitle"),
@@ -2667,8 +2667,8 @@ if (exists("ll_combined")) {
 if (exists("ll_deviations")) {
   figA2_data <- ll_deviations %>%
     dplyr::select("Date" = date,
-                  "Core goods deviation from trend (pp)" = core_goods_vs_trend,
-                  "Durable goods deviation from trend (pp)" = durables_vs_trend)
+                  "Core goods deviation from trend (%)" = core_goods_vs_trend,
+                  "Durable goods deviation from trend (%)" = durables_vs_trend)
   add_tbl_sheet(wb, "FA2", figA2_data,
     title    = fig_excel_title("FA2"),
     subtitle = fig_meta("FA2", "subtitle"),
