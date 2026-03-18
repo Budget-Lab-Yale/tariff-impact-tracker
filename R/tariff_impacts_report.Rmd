@@ -3260,18 +3260,7 @@ html_parts$sources <- paste0(
   '</section>\n\n'
 )
 
-# --- Appendix ---
-html_parts$appendix <- paste0(
-  '<section id="appendix">\n',
-  '<h2>Appendix</h2>\n',
-  '<p><strong>Note:</strong> Tables A1&ndash;A2 use overall PCE price indices (domestic + imported) rather than the import-weighted index used in the main text Tables 1a&ndash;1b.</p>\n',
-  '\n',
-  fig_placeholder("TA1", "TA1_pce_passthrough_jun2025.csv"),
-  fig_placeholder("TA2", "TA2_pce_passthrough_latest.csv"),
-  if (exists("ll_combined")) fig_placeholder("FA1", "FA1_pce_prices_loglinear_trend.csv") else "",
-  if (exists("ll_deviations")) fig_placeholder("FA2", "FA2_pce_deviation_loglinear.csv") else "",
-  '</section>\n\n'
-)
+# --- Appendix omitted from website HTML (figures/tables still exported as CSVs) ---
 
 html_parts$footer <- '</article>\n'
 
