@@ -2887,13 +2887,22 @@ This Excel file contains `r n_sheets` sheets:
 
 ```{r export-website, include=FALSE}
 # ==============================================================================
-# WEBSITE EXPORT
+# WEBSITE EXPORT (publication runs only)
 # ==============================================================================
 # Produces three outputs in website/:
 #   1. csv/      — one CSV per figure/table (current, overwritten each run)
 #   2. html/     — stripped-down HTML with narrative text and figure placeholders
 #   3. vintages/ — date-stamped snapshots of csv/ and html/ for each run
+# Only runs when PUBLICATION_RUN env var is TRUE (set by run_all.R).
 # ==============================================================================
+
+PUBLICATION_RUN_FLAG <- as.logical(Sys.getenv("PUBLICATION_RUN", unset = "FALSE"))
+if (is.na(PUBLICATION_RUN_FLAG)) PUBLICATION_RUN_FLAG <- FALSE
+
+if (!PUBLICATION_RUN_FLAG) {
+  website_csv_count <- 0
+  VINTAGE_DATE <- format(Sys.Date(), "%Y%m%d")
+} else {
 
 WEBSITE_DIR  <- here("website")
 CSV_DIR      <- file.path(WEBSITE_DIR, "csv")
@@ -3270,9 +3279,11 @@ html_path <- file.path(HTML_DIR, "tariff_impacts_report.html")
 writeLines(html_content, html_path)
 file.copy(html_path, file.path(VINTAGE_HTML, "tariff_impacts_report.html"),
           overwrite = TRUE)
+
+} # end if (PUBLICATION_RUN_FLAG)
 ```
 
-Website assets exported: `r website_csv_count` CSV files and 1 HTML file to `website/`. Vintage saved to `website/vintages/`r VINTAGE_DATE`/`.
+`r if (PUBLICATION_RUN_FLAG) paste0("Website assets exported: ", website_csv_count, " CSV files and 1 HTML file to website/. Vintage saved to website/vintages/", VINTAGE_DATE, "/.") else "Website export skipped (not a publication run)."`
 
 ---
 

@@ -48,15 +48,16 @@ cat(paste0("Tariff Impacts Pipeline Log\n"),
 # CONFIGURATION
 # ==============================================================================
 
-# Publication flag: set to TRUE for a final/publication run.
-# When TRUE, final outputs (Excel, HTML, Word) are copied to output/publication/
-# which is tracked by git. Regular (FALSE) runs stay in output/ and are gitignored.
-PUBLICATION_RUN <- TRUE
+# Publication flag: controls whether final outputs are copied to output/publication/
+# (which is tracked by git) and whether website assets are exported to website/.
+# Default: FALSE (local/development run). Set to TRUE for publication, or override
+# via environment variable: PUBLICATION_RUN=TRUE Rscript run_all.R
+PUBLICATION_RUN <- as.logical(Sys.getenv("PUBLICATION_RUN", unset = "FALSE"))
+if (is.na(PUBLICATION_RUN)) PUBLICATION_RUN <- FALSE
+cat("Run mode:", if (PUBLICATION_RUN) "PUBLICATION (outputs copied to publication/ and website/)" else "LOCAL (development only)", "\n\n")
 
-# Required packages
+# Required packages (Haver is optional -- loaded conditionally via check_haver_available())
 REQUIRED_PACKAGES <- c(
-  "Haver",       # Haver Analytics data access
-
   "dplyr",       # Data manipulation
   "tidyr",       # Data reshaping
   "lubridate",   # Date handling
@@ -78,10 +79,12 @@ REQUIRED_PACKAGES <- c(
   "depmixS4"     # Hidden Markov models (fallback for MSwM)
 )
 
-# Required input files for employment index (USITC tariffs + BEA import matrix)
+# Required input files for employment index
 EMP_INDEX_INPUTS <- c(
   "USITC - Customs and Duties - January 2026.xlsx",
-  "BEA - Import Matrix, Before Redefinitions - Summary - 2024.xlsx"
+  "BEA - Import Matrix, Before Redefinitions - Summary - 2024.xlsx",
+  "BEA - The Use of Commodities by Industry - Summary - 2024.xlsx",
+  "x_codes.csv"
 )
 
 # Required input files for import price index
@@ -111,24 +114,7 @@ install_missing_packages <- function(packages) {
   missing <- packages[!sapply(packages, requireNamespace, quietly = TRUE)]
   if (length(missing) > 0) {
     log_msg("INFO", paste("Installing missing packages:", paste(missing, collapse = ", ")))
-
-    # Haver package needs special handling
-    if ("Haver" %in% missing) {
-      haver_install_result <- tryCatch({
-        install.packages("Haver", repos = "http://www.haver.com/r/")
-        TRUE
-      }, error = function(e) {
-        log_msg("WARN", "Could not install Haver package - Haver connection will not be available")
-        FALSE
-      })
-      # Update missing list (without using <<-)
-      missing <- missing[missing != "Haver"]
-    }
-
-    # Install remaining packages from CRAN
-    if (length(missing) > 0) {
-      install.packages(missing)
-    }
+    install.packages(missing)
   }
 }
 
@@ -152,7 +138,7 @@ if (!check_packages_available(REQUIRED_PACKAGES)) {
   install_missing_packages(REQUIRED_PACKAGES)
 
   # Verify installation
-  if (!check_packages_available(REQUIRED_PACKAGES[REQUIRED_PACKAGES != "Haver"])) {
+  if (!check_packages_available(REQUIRED_PACKAGES)) {
     stop("Failed to install required packages. Please install manually.")
   }
 }
@@ -297,6 +283,9 @@ if (ipi_ready) {
 # ==============================================================================
 
 log_msg("INFO", "Step 6: Generating reports...")
+
+# Pass publication flag to Rmd environment so website export can read it
+Sys.setenv(PUBLICATION_RUN = as.character(PUBLICATION_RUN))
 
 # Check for report file
 report_file <- here("R", "tariff_impacts_report.Rmd")

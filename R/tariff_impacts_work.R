@@ -16,7 +16,8 @@
 # Date: January 2026
 # ==============================================================================
 
-library(Haver)
+# Haver is loaded conditionally via check_haver_available() in utils.R
+# Do not use library(Haver) -- it will fail if the package is not installed
 library(dplyr)
 library(tidyr)
 library(lubridate)

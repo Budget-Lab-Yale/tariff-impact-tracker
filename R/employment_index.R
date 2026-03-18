@@ -29,7 +29,8 @@
 # LOAD LIBRARIES
 # ==============================================================================
 
-library(Haver)
+# Haver is loaded conditionally via check_haver_available() in utils.R
+# Do not use library(Haver) -- it will fail if the package is not installed
 library(dplyr)
 library(tidyr)
 library(lubridate)
@@ -852,6 +853,14 @@ if (haver_available && length(all_y_codes) > 0) {
       dplyr::select(bea_code_j = bea_industry, y_j, description)
 
     log_msg("INFO", paste("Industry output data:", nrow(y_j_data), "industries"))
+
+    # Cache raw Haver pull for offline fallback
+    tryCatch({
+      write_csv(y_j_recent, file.path(OUTPUT_DIR, "y_j_output.csv"))
+      log_msg("INFO", "Cached industry output to y_j_output.csv")
+    }, error = function(e) {
+      log_msg("WARN", paste("Could not cache y_j_output.csv:", e$message))
+    })
 
     log_msg("INFO", "Industry output data ready")
   }
