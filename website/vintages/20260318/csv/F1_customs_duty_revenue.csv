@@ -75,6 +75,6 @@
 2026-02-01,26594,26594,7631.94495993192
 
 # Figure 1. Customs Duty Revenue (Inflation-Adjusted)
-# Monthly federal customs duty revenue in 2025 dollars, deflated by CPI-U
-# Source: U.S. Treasury via Haver Analytics, BLS CPI
+# Monthly federal customs duty revenue in 2025 dollars; deflated by CPI-U
+# Source: U.S. Treasury via Haver Analytics; BLS CPI
 # Note: October 2025 CPI interpolated (government shutdown delayed BLS release). 

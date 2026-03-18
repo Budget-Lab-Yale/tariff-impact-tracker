@@ -444,5 +444,5 @@
 
 # Figure 4. Daily Effective Tariff Rate by Authority
 # Import-weighted ETR decomposed by tariff authority
-# Source: The Budget Lab Tariff Rate Tracker (USITC HTS data, Census 2024 import weights)
-# Note: Authorities: Section 232 (steel/aluminum/autos), Section 301 (China), IEEPA (reciprocal/fentanyl), Section 122 (post-SCOTUS). Section 201 omitted (negligible). 
+# Source: The Budget Lab Tariff Rate Tracker (USITC HTS data; Census 2024 import weights)
+# Note: Authorities: Section 232 (steel/aluminum/autos); Section 301 (China); IEEPA (reciprocal/fentanyl); Section 122 (post-SCOTUS). Section 201 omitted (negligible). 

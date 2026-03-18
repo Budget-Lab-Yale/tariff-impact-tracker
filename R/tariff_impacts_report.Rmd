@@ -2924,15 +2924,17 @@ write_website_csv <- function(data, filename, fig_id) {
     # Write data first (header row must be first for Datawrapper)
     write.table(data, path, sep = ",", row.names = FALSE,
                 quote = TRUE, na = "")
-    # Append metadata as comment lines after data
+    # Append metadata as comment lines after data (strip commas to avoid
+    # Datawrapper interpreting notes as extra data columns)
+    strip_commas <- function(x) gsub(",", ";", x)
     meta_lines <- c(
       "",
-      paste0("# ", fig_meta(fig_id, "label"), ". ", fig_meta(fig_id, "title")),
-      paste0("# ", fig_meta(fig_id, "subtitle")),
-      paste0("# Source: ", fig_meta(fig_id, "source"))
+      paste0("# ", strip_commas(paste0(fig_meta(fig_id, "label"), ". ", fig_meta(fig_id, "title")))),
+      paste0("# ", strip_commas(fig_meta(fig_id, "subtitle"))),
+      paste0("# Source: ", strip_commas(fig_meta(fig_id, "source")))
     )
     notes <- fig_meta(fig_id, "notes")
-    if (nzchar(notes)) meta_lines <- c(meta_lines, paste0("# Note: ", notes))
+    if (nzchar(notes)) meta_lines <- c(meta_lines, paste0("# Note: ", strip_commas(notes)))
     cat(paste0(meta_lines, collapse = "\n"), "\n", file = path, append = TRUE)
     # Copy to vintage
     file.copy(path, file.path(VINTAGE_CSV, filename), overwrite = TRUE)
