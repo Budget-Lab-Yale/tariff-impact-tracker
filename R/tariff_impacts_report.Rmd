@@ -131,30 +131,46 @@ FIGURE_METADATA <- list(
   ),
   F3 = list(
     label    = "Figure 3",
+    title    = "Daily Effective Tariff Rate (Import-Weighted)",
+    subtitle = "Overall import-weighted effective tariff rate by calendar day",
+    source   = "The Budget Lab Tariff Rate Tracker (USITC HTS data, Census 2024 import weights)",
+    notes    = "Vertical lines indicate major policy changes. Rates change only at policy revision boundaries.",
+    y_label  = "Percent"
+  ),
+  F4 = list(
+    label    = "Figure 4",
+    title    = "Daily Effective Tariff Rate by Authority",
+    subtitle = "Import-weighted ETR decomposed by tariff authority",
+    source   = "The Budget Lab Tariff Rate Tracker (USITC HTS data, Census 2024 import weights)",
+    notes    = "Authorities: Section 232 (steel/aluminum/autos), Section 301 (China), IEEPA (reciprocal/fentanyl), Section 122 (post-SCOTUS). Section 201 omitted (negligible).",
+    y_label  = "Percent"
+  ),
+  F5 = list(
+    label    = "Figure 5",
     title    = "PCE Core Goods & Durables Prices",
     subtitle = "Index (Dec 2024 = 100) versus local projection with 90% CIs",
     source   = "Bureau of Economic Analysis via Haver Analytics and The Budget Lab analysis",
     notes    = "",
     y_label  = "Index"
   ),
-  F4 = list(
-    label    = "Figure 4",
+  F6 = list(
+    label    = "Figure 6",
     title    = "PCE Goods Prices: Deviation from Trend",
     subtitle = "Percent difference from trend (local projection)",
     source   = "Bureau of Economic Analysis via Haver Analytics and The Budget Lab analysis",
     notes    = "",
     y_label  = "Percent vs. Trend"
   ),
-  F5 = list(
-    label    = "Figure 5",
+  F7 = list(
+    label    = "Figure 7",
     title    = "Imported PCE Core Goods & Durables Prices",
     subtitle = "Import-content-weighted index (Dec 2024 = 100) versus local projection with 90% CIs",
     source   = "BEA PCE components via Haver Analytics, BEA I-O Tables, and The Budget Lab analysis",
     notes    = "",
     y_label  = "Index"
   ),
-  F6 = list(
-    label    = "Figure 6",
+  F8 = list(
+    label    = "Figure 8",
     title    = "Imported PCE Goods Prices: Deviation from Trend",
     subtitle = "Percent difference from trend (import-content-weighted index)",
     source   = "BEA PCE components via Haver Analytics, BEA I-O Tables, and The Budget Lab analysis",
@@ -183,24 +199,24 @@ FIGURE_METADATA <- list(
       "Log-Linear: Price deviation from simple log-linear trend fit to 2023-2024 data. ",
       "Simple: Raw price change with no trend adjustment.")
   ),
-  F7 = list(
-    label    = "Figure 7",
+  F9 = list(
+    label    = "Figure 9",
     title    = "Non-Petroleum Import Prices",
     subtitle = "Index (Dec 2024 = 100) versus simple linear projection",
     source   = "Bureau of Labor Statistics via Haver Analytics",
     notes    = "October 2025 import prices interpolated (government shutdown delayed BLS release). Simple linear projection based on 2023-2024 data.",
     y_label  = "Index"
   ),
-  F8 = list(
-    label    = "Figure 8",
+  F10 = list(
+    label    = "Figure 10",
     title    = "Tariff-Exposed Employment Index",
     subtitle = "Leontief-adjusted total import content weighting, index (Dec 2024 = 100)",
     source   = "BLS via Haver, USITC DataWeb, BEA I-O Tables (including Total Requirements), and The Budget Lab analysis",
     notes    = "",
     y_label  = "Index"
   ),
-  F9 = list(
-    label    = "Figure 9",
+  F11 = list(
+    label    = "Figure 11",
     title    = "Manufacturing Tariff-Exposed Employment Index",
     subtitle = "Leontief-adjusted total import content weighting, index (Dec 2024 = 100)",
     source   = "BLS via Haver, USITC DataWeb, BEA I-O Tables (including Total Requirements), and The Budget Lab analysis",
@@ -214,40 +230,40 @@ FIGURE_METADATA <- list(
     source   = "BLS via Haver, USITC, BEA I-O Tables",
     notes    = ""
   ),
-  F10 = list(
-    label    = "Figure 10",
+  F12 = list(
+    label    = "Figure 12",
     title    = "Manufacturing Industrial Production",
     subtitle = "Index (Dec 2024 = 100), simple linear trend fit to 2023-2024",
     source   = "Federal Reserve via Haver Analytics",
     notes    = "",
     y_label  = "Index"
   ),
-  F11 = list(
-    label    = "Figure 11",
+  F13 = list(
+    label    = "Figure 13",
     title    = "Nominal Effective Exchange Rates (Daily)",
     subtitle = "BIS broad NEER index (Dec 2024 average = 100), increase = appreciation",
     source   = "Haver Analytics (INTDAILY)",
     notes    = "",
     y_label  = "Index"
   ),
-  F12 = list(
-    label    = "Figure 12",
+  F14 = list(
+    label    = "Figure 14",
     title    = "Real US Imports and Exports",
     subtitle = "Billions of 2025 USD, simple linear trend (2023-2024)",
     source   = "Census Bureau via Haver Analytics",
     notes    = "",
     y_label  = "Billions USD"
   ),
-  F13a = list(
-    label    = "Figure 13a",
+  F15a = list(
+    label    = "Figure 15a",
     title    = "Trade Deviation from Trend",
     subtitle = "Percent difference from pre-2025 trend",
     source   = "Census Bureau via Haver Analytics",
     notes    = "",
     y_label  = "Percent vs. Trend"
   ),
-  F13b = list(
-    label    = "Figure 13b",
+  F15b = list(
+    label    = "Figure 15b",
     title    = "Cumulative Import Gap vs. Trend",
     subtitle = "Running total of monthly import gap since Dec 2024 (billions 2025 USD)",
     source   = "Census Bureau via Haver Analytics",
@@ -401,6 +417,30 @@ fx_daily_available <- file.exists(fx_daily_file)
 if (fx_daily_available) {
   fx_daily <- read_csv(fx_daily_file, show_col_types = FALSE) %>%
     dplyr::mutate(date = as.Date(date))
+}
+
+# Optional: Daily ETR series (from tariff-rate-tracker)
+TARIFF_TRACKER_DIR <- file.path(dirname(here()), "tariff-rate-tracker", "output", "daily")
+daily_etr_file <- file.path(TARIFF_TRACKER_DIR, "daily_overall.csv")
+daily_auth_file <- file.path(TARIFF_TRACKER_DIR, "daily_by_authority.csv")
+daily_etr_available <- file.exists(daily_etr_file) && file.exists(daily_auth_file)
+if (daily_etr_available) {
+  daily_etr <- read_csv(daily_etr_file, show_col_types = FALSE) %>%
+    dplyr::mutate(date = as.Date(date))
+  daily_auth <- read_csv(daily_auth_file, show_col_types = FALSE) %>%
+    dplyr::mutate(date = as.Date(date))
+
+  # Policy period markers (major regime changes)
+  POLICY_EVENTS <- tribble(
+    ~date,              ~label,
+    "2025-02-04",       "Fentanyl",
+    "2025-03-12",       "232 Autos",
+    "2025-04-02",       "Liberation Day",
+    "2025-04-09",       "Phase 1 Pause",
+    "2025-07-01",       "Phase 2",
+    "2025-08-07",       "Phase 2 Recip.",
+    "2026-02-24",       "SCOTUS / S.122"
+  ) %>% dplyr::mutate(date = as.Date(date))
 }
 
 # Optional: Tariff employment index (from employment_index.R)
@@ -612,7 +652,7 @@ tk_expected_dur  <- takeaway_tariff_increase * IMPORT_SHARE_DURABLES * 100
 tk_pt_core_simple <- safe_divide(core_ytd_change, tk_expected_core) * 100
 tk_pt_dur_simple  <- safe_divide(dur_ytd_change, tk_expected_dur) * 100
 
-# Method 2: LP trend passthrough (same parameters as Figure 3)
+# Method 2: LP trend passthrough (same parameters as Figure 5)
 pce_for_takeaway <- pce_prices %>% filter(date >= "1996-01-01")
 
 tk_core_lp <- local_projection_trend_plain(
@@ -689,7 +729,7 @@ if (ipi_available) {
   tk_ipi_pt_core_simple <- safe_divide(tk_ipi_ytd_core, tk_ipi_expected_core) * 100
   tk_ipi_pt_dur_simple  <- safe_divide(tk_ipi_ytd_dur, tk_ipi_expected_dur) * 100
 
-  # Method 2: LP trend passthrough (same parameters as Figure 5)
+  # Method 2: LP trend passthrough (same parameters as Figure 7)
   ipi_for_takeaway <- ipi_data %>% filter(date >= "1996-01-01")
   tk_ipi_core_lp_result <- local_projection_trend_plain(
     ipi_for_takeaway, "imported_core_goods",
@@ -827,6 +867,77 @@ tariff_revenue %>%
   scale_y_continuous(labels = percent_format(scale = 1))
 ```
 
+```{r fig-daily-etr, eval=daily_etr_available, fig.height=5}
+# Filter to dates with actual data (exclude future projections)
+daily_plot <- daily_etr %>%
+  filter(date <= Sys.Date())
+
+# Annotate current ETR
+latest_daily <- daily_plot %>% filter(date == max(date))
+latest_etr_pct <- latest_daily$weighted_etr * 100
+
+daily_plot %>%
+  ggplot(aes(x = date, y = weighted_etr * 100)) +
+  geom_step(color = color_series1, linewidth = 0.8) +
+  geom_vline(data = POLICY_EVENTS %>% filter(date <= max(daily_plot$date)),
+             aes(xintercept = date), linetype = "dashed", color = tbl_gray, linewidth = 0.4) +
+  geom_text(data = POLICY_EVENTS %>% filter(date <= max(daily_plot$date)),
+            aes(x = date, y = Inf, label = label),
+            vjust = 1.3, hjust = -0.05, size = 2.5, color = tbl_gray, angle = 0) +
+  labs(
+    title = fig_meta("F3", "title"),
+    subtitle = fig_meta("F3", "subtitle"),
+    x = NULL,
+    y = fig_meta("F3", "y_label"),
+    caption = fig_caption("F3")
+  ) +
+  scale_y_continuous(labels = percent_format(scale = 1))
+```
+
+```{r fig-daily-etr-na, eval=!daily_etr_available, results='asis'}
+cat("*Daily ETR data not available. Run the tariff-rate-tracker pipeline to generate daily series.*")
+```
+
+```{r fig-daily-etr-authority, eval=daily_etr_available, fig.height=6}
+# Prepare stacked area data from authority decomposition
+auth_plot <- daily_auth %>%
+  filter(date <= Sys.Date()) %>%
+  dplyr::select(date, etr_232, etr_301, etr_ieepa, etr_fentanyl, etr_s122) %>%
+  dplyr::mutate(across(starts_with("etr_"), ~ . * 100)) %>%
+  tidyr::pivot_longer(-date, names_to = "authority", values_to = "etr") %>%
+  dplyr::mutate(authority = factor(authority,
+    levels = c("etr_s122", "etr_fentanyl", "etr_ieepa", "etr_301", "etr_232"),
+    labels = c("Section 122", "IEEPA Fentanyl", "IEEPA Reciprocal", "Section 301", "Section 232")))
+
+auth_colors <- c(
+  "Section 232"       = "#0055A4",
+  "Section 301"       = "#C8102E",
+  "IEEPA Reciprocal"  = "#28A745",
+  "IEEPA Fentanyl"    = "#FFC107",
+  "Section 122"       = "#6C757D"
+)
+
+auth_plot %>%
+  ggplot(aes(x = date, y = etr, fill = authority)) +
+  geom_area(position = "stack") +
+  geom_vline(data = POLICY_EVENTS %>% filter(date <= max(daily_auth$date[daily_auth$date <= Sys.Date()])),
+             aes(xintercept = date), linetype = "dashed", color = "white", linewidth = 0.4) +
+  scale_fill_manual(values = auth_colors) +
+  labs(
+    title = fig_meta("F4", "title"),
+    subtitle = fig_meta("F4", "subtitle"),
+    x = NULL,
+    y = fig_meta("F4", "y_label"),
+    fill = NULL,
+    caption = fig_caption("F4")
+  ) +
+  scale_y_continuous(labels = percent_format(scale = 1))
+```
+
+```{r fig-daily-etr-authority-na, eval=!daily_etr_available, results='asis'}
+cat("*Daily ETR authority decomposition not available. Run the tariff-rate-tracker pipeline to generate daily series.*")
+```
+
 ## Prices and Consumer Passthrough
 
 One of the most debated questions around tariffs is to what extent they are leading to higher consumer prices. Tariffs are taxes that add to the cost of imported goods. Different groups can bear this cost, or incidence: foreign producers (in the form of accepting lower prices on their exports), American importers and businesses (in the form of lower profit margins), and American consumers (in the form of lower real after-tax incomes). Moreover, tariffs reduce productivity and thereby real U.S. income (even when including tariff revenue) by reducing the efficiency of resource allocation across countries and increasing the marginal cost of investment. After-tax real incomes in turn can fall either from a rise in realized prices, holding nominal income constant, or a fall in nominal income. 
@@ -855,7 +966,7 @@ latest_pce_date <- format(max(core_early_trend$date), "%B")
 
 One possible indication that tariffs are raising consumer goods prices is that goods prices have increased since the beginning of the year, both in absolute terms and against reasonable estimates of pre-2025 trend. We estimate the pre-2025 trend using a local projection method with recession and pandemic controls. See the [`r meth_text`](`r meth_link`) for full details. We find similar differences when the trend is calculated using a simple log-linear approach. During 2025 through `r data_month_name`, PCE core goods prices (goods excluding volatile food & energy components) rose `r safe_fmt(core_ytd_change)`%, versus `r safe_fmt(core_2023_change)`% over the same `r months_since_2025`-month period starting in 2023. The difference is even starker with PCE durable goods prices, which rose `r safe_fmt(dur_ytd_change)`%, versus `r safe_fmt(dur_2023_change)`% over the same period starting in 2023. Core goods and durable goods were `r safe_fmt(latest_core_dev)`% and `r safe_fmt(latest_dur_dev)`% above TBL's estimate of pre-2025 trend in `r latest_pce_date`.
 
-Versions of Figures 3 and 4 using the log-linear trend approach are included in the [Appendix below](#appendix).
+Versions of Figures 5 and 6 using the log-linear trend approach are included in the [Appendix below](#appendix).
 
 ```{r fig-pce-goods}
 # Reuse LP trend results from compute-trend-deviations chunk (identical parameters)
@@ -923,12 +1034,12 @@ ggplot(pce_combined, aes(x = date)) +
                         guide = "none") +
   scale_y_continuous(limits = c(96, 104)) +
   labs(
-    title = fig_meta("F3", "title"),
-    subtitle = fig_meta("F3", "subtitle"),
+    title = fig_meta("F5", "title"),
+    subtitle = fig_meta("F5", "subtitle"),
     x = NULL,
-    y = fig_meta("F3", "y_label"),
+    y = fig_meta("F5", "y_label"),
     color = NULL,
-    caption = fig_caption("F3")
+    caption = fig_caption("F5")
   )
 ```
 
@@ -942,12 +1053,12 @@ pce_for_fig4 %>%
   geom_hline(yintercept = 0, color = "black") +
   scale_fill_manual(values = c("Core Goods" = color_series1, "Durables" = color_series2)) +
   labs(
-    title = fig_meta("F4", "title"),
-    subtitle = fig_meta("F4", "subtitle"),
+    title = fig_meta("F6", "title"),
+    subtitle = fig_meta("F6", "subtitle"),
     x = NULL,
-    y = fig_meta("F4", "y_label"),
+    y = fig_meta("F6", "y_label"),
     fill = NULL,
-    caption = fig_caption("F4")
+    caption = fig_caption("F6")
   )
 ```
 
@@ -1049,12 +1160,12 @@ ggplot(ipi_combined, aes(x = date)) +
                         guide = "none") +
   scale_y_continuous(limits = c(96, 106)) +
   labs(
-    title = fig_meta("F5", "title"),
-    subtitle = fig_meta("F5", "subtitle"),
+    title = fig_meta("F7", "title"),
+    subtitle = fig_meta("F7", "subtitle"),
     x = NULL,
-    y = fig_meta("F5", "y_label"),
+    y = fig_meta("F7", "y_label"),
     color = NULL,
-    caption = fig_caption("F5")
+    caption = fig_caption("F7")
   )
 ```
 
@@ -1072,12 +1183,12 @@ ipi_for_fig6 %>%
   geom_hline(yintercept = 0, color = "black") +
   scale_fill_manual(values = c("Imported Core Goods" = color_series1, "Imported Durables" = color_series2)) +
   labs(
-    title = fig_meta("F6", "title"),
-    subtitle = fig_meta("F6", "subtitle"),
+    title = fig_meta("F8", "title"),
+    subtitle = fig_meta("F8", "subtitle"),
     x = NULL,
-    y = fig_meta("F6", "y_label"),
+    y = fig_meta("F8", "y_label"),
     fill = NULL,
-    caption = fig_caption("F6")
+    caption = fig_caption("F8")
   )
 ```
 
@@ -1115,7 +1226,7 @@ latest_prices <- pce_prices %>% filter(date == max(date))
 ytd_core <- safe_divide((latest_prices$pce_core_goods - dec_base_core), dec_base_core) * 100
 ytd_dur <- safe_divide((latest_prices$pce_durables - dec_base_dur), dec_base_dur) * 100
 
-# Method 1: Local Projection trend deviations (from Figure 3)
+# Method 1: Local Projection trend deviations (from Figure 5)
 # Helper function for safe extraction (defined once, used for both LP and LL)
 safe_val <- function(df, col) {
   if (is.null(df) || nrow(df) == 0) return(NA_real_)
@@ -1136,7 +1247,7 @@ trend_core_lp <- safe_val(latest_lp, "core_goods_vs_trend")
 trend_dur_lp <- safe_val(latest_lp, "durables_vs_trend")
 
 # NOTE: Passthrough CIs removed pending methodology review.
-# The trend CIs (core_lower/upper, dur_lower/upper in pce_combined) are still used in Figure 3.
+# The trend CIs (core_lower/upper, dur_lower/upper in pce_combined) are still used in Figure 5.
 
 # Method 2: Log-linear trend deviations (simple 2023-2024 log-linear trend)
 core_loglinear_pt <- calc_log_linear_trend(
@@ -1417,7 +1528,7 @@ In its modeling, TBL assumes that passthrough of tariffs to consumer prices will
 
 In [November 2025](https://budgetlab.yale.edu/research/state-us-tariffs-november-17-2025) (the month of the latest detailed Census trade data), the statutory fully-phased-in average tariff policy rate was 16.8%, but as mentioned earlier, there are several reasons why it takes time for tariff policy to fully flow through into realized revenues. We therefore use as our basis the actual average effective tariff rate, which was `r sprintf("%.1f%%", nov_2025_rate)` that month. But this rate, calculated based on all revenues and imports, includes products and content that will not ultimately be purchased by consumers, such as business investment and exports. TBL therefore calculated average tariff rates on imported consumer goods. For imported core PCE goods, the average import-weighted effective tariff rate was `r sprintf("%.1f%%", tau_core_recent)` in the most recent month, up from a 2022--2024 average of roughly `r sprintf("%.1f%%", tau_baseline_pct)` (the 2025 annual average was `r sprintf("%.1f%%", tau_core_2025)`). For just imported PCE durables, the most-recent-month rate was `r sprintf("%.1f%%", tau_dur_recent)`, up from roughly `r sprintf("%.1f%%", tau_baseline_pct)` (2025 annual average: `r sprintf("%.1f%%", tau_dur_2025)`). Given these shifts and the import share of PCE (total import content---including indirect imports through the supply chain---is `r sprintf("%.1f%%", IMPORT_SHARE_CORE_GOODS * 100)` of core goods spending; see [`r meth_text`](`r meth_link`)), we would expect full passthrough price effects from the actual tariff increases in 2025 so far to add `r sprintf("%.1f", ipi_expected_core)` and `r sprintf("%.1f", ipi_expected_dur)` percentage points through `r data_month` for core goods and durables prices, respectively. 
 
-We estimate the rise in imported core goods and durable prices in three ways. The first, and our preferred approach, uses the trend estimates reported in Figure 5 as the counterfactual level of prices but-for tariffs. The second approach uses data from 2023-2024 to project forward pre-2025 prices. The third approach moves away from relying on estimating trends, and rather assumes that prices would have remained at their December 2024 level. It therefore uses the change in prices during 2025 through `r data_month_name`. We think that this approach underestimates true price increases from the tariffs by ignoring counterfactuals, but provides an easy lower-bound estimate.
+We estimate the rise in imported core goods and durable prices in three ways. The first, and our preferred approach, uses the trend estimates reported in Figure 7 as the counterfactual level of prices but-for tariffs. The second approach uses data from 2023-2024 to project forward pre-2025 prices. The third approach moves away from relying on estimating trends, and rather assumes that prices would have remained at their December 2024 level. It therefore uses the change in prices during 2025 through `r data_month_name`. We think that this approach underestimates true price increases from the tariffs by ignoring counterfactuals, but provides an easy lower-bound estimate.
 
 The results of each are shown below, with one table for June 2025 and one for the most recent month of data, `r data_month`. Tables 1a and 1b use these category-specific tariff rates rather than the economy-wide effective rate, since the tariff burden varies across consumer goods categories. Passthrough tables using overall PCE prices (as opposed to the imported goods) are available in the [Appendix below](#appendix).
 
@@ -1538,12 +1649,12 @@ import_trend %>%
   scale_linetype_manual(values = c("Actual" = "solid", "Trend" = "dashed")) +
   scale_y_continuous(limits = c(96, 104)) +
   labs(
-    title = fig_meta("F7", "title"),
-    subtitle = fig_meta("F7", "subtitle"),
+    title = fig_meta("F9", "title"),
+    subtitle = fig_meta("F9", "subtitle"),
     x = NULL,
-    y = fig_meta("F7", "y_label"),
+    y = fig_meta("F9", "y_label"),
     linetype = NULL,
-    caption = fig_caption("F7")
+    caption = fig_caption("F9")
   ) +
   theme(legend.position = "none")
 ```
@@ -1678,11 +1789,11 @@ ggplot(trend_recent, aes(x = date)) +
   geom_vline(xintercept = as.Date("2025-01-01"), linetype = "dashed", color = tbl_gray) +
   scale_y_continuous(limits = c(96, 104)) +
   labs(
-    title = fig_meta("F8", "title"),
-    subtitle = fig_meta("F8", "subtitle"),
+    title = fig_meta("F10", "title"),
+    subtitle = fig_meta("F10", "subtitle"),
     x = NULL,
-    y = fig_meta("F8", "y_label"),
-    caption = fig_caption("F8")
+    y = fig_meta("F10", "y_label"),
+    caption = fig_caption("F10")
   )
 ```
 
@@ -1719,11 +1830,11 @@ ggplot(trend_mfg_recent, aes(x = date)) +
   geom_vline(xintercept = as.Date("2025-01-01"), linetype = "dashed", color = tbl_gray) +
   scale_y_continuous(limits = c(96, 104)) +
   labs(
-    title = fig_meta("F9", "title"),
-    subtitle = fig_meta("F9", "subtitle"),
+    title = fig_meta("F11", "title"),
+    subtitle = fig_meta("F11", "subtitle"),
     x = NULL,
-    y = fig_meta("F9", "y_label"),
-    caption = fig_caption("F9")
+    y = fig_meta("F11", "y_label"),
+    caption = fig_caption("F11")
   )
 ```
 
@@ -1801,12 +1912,12 @@ ip_trend %>%
   geom_vline(xintercept = as.Date("2025-01-01"), linetype = "dashed", color = tbl_gray) +
   scale_linetype_manual(values = c("Actual" = "solid", "Trend" = "dashed")) +
   labs(
-    title = fig_meta("F10", "title"),
-    subtitle = fig_meta("F10", "subtitle"),
+    title = fig_meta("F12", "title"),
+    subtitle = fig_meta("F12", "subtitle"),
     x = NULL,
-    y = fig_meta("F10", "y_label"),
+    y = fig_meta("F12", "y_label"),
     linetype = NULL,
-    caption = fig_caption("F10")
+    caption = fig_caption("F12")
   ) +
   theme(legend.position = "none")
 ```
@@ -1903,12 +2014,12 @@ fx_daily_indexed %>%
                                  "Canada (CAD)" = tbl_colors[2],
                                  "China (CNY)" = tbl_colors[3])) +
   labs(
-    title = fig_meta("F11", "title"),
-    subtitle = fig_meta("F11", "subtitle"),
+    title = fig_meta("F13", "title"),
+    subtitle = fig_meta("F13", "subtitle"),
     x = NULL,
-    y = fig_meta("F11", "y_label"),
+    y = fig_meta("F13", "y_label"),
     color = NULL,
-    caption = fig_caption("F11")
+    caption = fig_caption("F13")
   )
 ```
 
@@ -2014,12 +2125,12 @@ ggplot(trade_plot, aes(x = date, y = value / 1000, color = type, linetype = line
   scale_linetype_manual(values = c("Actual" = "solid", "Trend" = "dashed"),
                         guide = "none") +
   labs(
-    title = fig_meta("F12", "title"),
-    subtitle = fig_meta("F12", "subtitle"),
+    title = fig_meta("F14", "title"),
+    subtitle = fig_meta("F14", "subtitle"),
     x = NULL,
-    y = fig_meta("F12", "y_label"),
+    y = fig_meta("F14", "y_label"),
     color = NULL,
-    caption = fig_caption("F12")
+    caption = fig_caption("F14")
   ) +
   scale_y_continuous(limits = c(0, NA), labels = dollar_format(prefix = "$", suffix = "B"))
 
@@ -2049,10 +2160,10 @@ p1 <- ggplot(trade_deviation, aes(x = date, y = pct_deviation, fill = series)) +
   geom_vline(xintercept = as.Date("2025-01-01"), linetype = "dashed", color = tbl_gray) +
   scale_fill_manual(values = c("Imports" = color_series1, "Exports" = color_series2)) +
   labs(
-    title = fig_meta("F13a", "title"),
-    subtitle = fig_meta("F13a", "subtitle"),
+    title = fig_meta("F15a", "title"),
+    subtitle = fig_meta("F15a", "subtitle"),
     x = NULL,
-    y = fig_meta("F13a", "y_label"),
+    y = fig_meta("F15a", "y_label"),
     fill = NULL
   )
 
@@ -2069,11 +2180,11 @@ p2 <- ggplot(cumulative_trade, aes(x = date, y = cumul_imports)) +
   geom_hline(yintercept = 0, color = "black") +
   geom_vline(xintercept = as.Date("2025-01-01"), linetype = "dashed", color = tbl_gray) +
   labs(
-    title = fig_meta("F13b", "title"),
-    subtitle = fig_meta("F13b", "subtitle"),
+    title = fig_meta("F15b", "title"),
+    subtitle = fig_meta("F15b", "subtitle"),
     x = NULL,
-    y = fig_meta("F13b", "y_label"),
-    caption = fig_caption("F13b")
+    y = fig_meta("F15b", "y_label"),
+    caption = fig_caption("F15b")
   )
 
 # Keep cumulative_imports for excel export compatibility
@@ -2383,7 +2494,44 @@ add_tbl_sheet(wb, "F2", fig2_data,
   subtitle = fig_meta("F2", "subtitle"),
   source   = fig_meta("F2", "source"))
 
-# Figure 3: PCE Prices with Trend
+# Figure 3: Daily Effective Tariff Rate
+if (daily_etr_available) {
+  fig3_data <- daily_etr %>%
+    filter(date <= Sys.Date()) %>%
+    dplyr::select("Date" = date,
+                  "Revision" = revision,
+                  "Weighted ETR" = weighted_etr,
+                  "Weighted ETR (additional)" = weighted_etr_additional,
+                  "Matched imports ($B)" = matched_imports_b,
+                  "Total imports ($B)" = total_imports_b)
+  add_tbl_sheet(wb, "F3", fig3_data,
+    title    = fig_excel_title("F3"),
+    subtitle = fig_meta("F3", "subtitle"),
+    source   = fig_meta("F3", "source"),
+    notes    = fig_meta("F3", "notes"),
+    date_format = "yyyy-mm-dd")
+}
+
+# Figure 4: Daily ETR by Authority
+if (daily_etr_available) {
+  fig4_data <- daily_auth %>%
+    filter(date <= Sys.Date()) %>%
+    dplyr::select("Date" = date,
+                  "Revision" = revision,
+                  "Section 232 ETR" = etr_232,
+                  "Section 301 ETR" = etr_301,
+                  "IEEPA ETR" = etr_ieepa,
+                  "Fentanyl ETR" = etr_fentanyl,
+                  "Section 122 ETR" = etr_s122)
+  add_tbl_sheet(wb, "F4", fig4_data,
+    title    = fig_excel_title("F4"),
+    subtitle = fig_meta("F4", "subtitle"),
+    source   = fig_meta("F4", "source"),
+    notes    = fig_meta("F4", "notes"),
+    date_format = "yyyy-mm-dd")
+}
+
+# Figure 5: PCE Prices with Trend
 fig3_data <- pce_combined %>%
   dplyr::select("Date" = date,
          "Core goods index (December 2024 = 100)" = core_goods_idx,
@@ -2395,21 +2543,21 @@ fig3_data <- pce_combined %>%
          "Durable goods trend, lower bound" = dur_lower,
          "Durable goods trend, upper bound" = dur_upper,
          "Forecast indicator" = is_forecast)
-add_tbl_sheet(wb, "F3", fig3_data,
-  title    = fig_excel_title("F3"),
-  subtitle = fig_meta("F3", "subtitle"),
-  source   = fig_meta("F3", "source"))
+add_tbl_sheet(wb, "F5", fig3_data,
+  title    = fig_excel_title("F5"),
+  subtitle = fig_meta("F5", "subtitle"),
+  source   = fig_meta("F5", "source"))
 
-# Figure 4: Deviation from Trend
+# Figure 6: Deviation from Trend
 fig4_data <- pce_for_fig4 %>%
   filter(date >= "2024-12-01") %>%
   dplyr::select("Date" = date, 
                 "Core goods deviation from trend (%)" = core_goods_vs_trend,
                 "Durable goods deviation from trend (%)" = dur_vs_trend)
-add_tbl_sheet(wb, "F4", fig4_data,
-  title    = fig_excel_title("F4"),
-  subtitle = fig_meta("F4", "subtitle"),
-  source   = fig_meta("F4", "source"))
+add_tbl_sheet(wb, "F6", fig4_data,
+  title    = fig_excel_title("F6"),
+  subtitle = fig_meta("F6", "subtitle"),
+  source   = fig_meta("F6", "source"))
 
 # Table 1a: IPI Passthrough (June 2025) - main text
 if (ipi_available && exists("ipi_passthrough_jun")) {
@@ -2491,7 +2639,7 @@ add_tbl_sheet(wb, "TA2", tblA2_data,
   subtitle = fig_meta("TA2", "subtitle"),
   source   = fig_meta("TA2", "source"))
 
-# Figures 5-6: Imported PCE Price Index (conditional)
+# Figures 7-8: Imported PCE Price Index (conditional)
 if (ipi_available && exists("ipi_combined")) {
   fig5_data <- ipi_combined %>%
     dplyr::select("Date" = date,
@@ -2504,58 +2652,58 @@ if (ipi_available && exists("ipi_combined")) {
            "Imported durables trend, lower bound" = dur_lower,
            "Imported durables trend, upper bound" = dur_upper,
            "Forecast indicator" = is_forecast)
-  add_tbl_sheet(wb, "F5", fig5_data,
-    title    = fig_excel_title("F5"),
-    subtitle = fig_meta("F5", "subtitle"),
-    source   = fig_meta("F5", "source"))
+  add_tbl_sheet(wb, "F7", fig5_data,
+    title    = fig_excel_title("F7"),
+    subtitle = fig_meta("F7", "subtitle"),
+    source   = fig_meta("F7", "source"))
 
   fig6_data <- ipi_for_fig6 %>%
     filter(date >= "2024-12-01") %>%
     dplyr::select("Date" = date,
            "Imported core goods deviation from trend (%)" = core_goods_vs_trend,
            "Imported durables deviation from trend (%)" = durables_vs_trend)
-  add_tbl_sheet(wb, "F6", fig6_data,
-    title    = fig_excel_title("F6"),
-    subtitle = fig_meta("F6", "subtitle"),
-    source   = fig_meta("F6", "source"))
+  add_tbl_sheet(wb, "F8", fig6_data,
+    title    = fig_excel_title("F8"),
+    subtitle = fig_meta("F8", "subtitle"),
+    source   = fig_meta("F8", "source"))
 }
 
-# Figure 7: Import Prices
+# Figure 9: Import Prices
 fig7_data <- import_trend %>%
   dplyr::select("Date" = date,
                 "Import price index (Dec 2024 = 100)" = import_idx,
                 "Trend" = trend,
                 "Deviation from trend (%)" = vs_trend)
-add_tbl_sheet(wb, "F7", fig7_data,
-  title    = fig_excel_title("F7"),
-  subtitle = fig_meta("F7", "subtitle"),
-  source   = fig_meta("F7", "source"),
-  notes    = fig_meta("F7", "notes"))
+add_tbl_sheet(wb, "F9", fig7_data,
+  title    = fig_excel_title("F9"),
+  subtitle = fig_meta("F9", "subtitle"),
+  source   = fig_meta("F9", "source"),
+  notes    = fig_meta("F9", "notes"))
 
-# Figure 8: Tariff Employment Index (conditional)
+# Figure 10: Tariff Employment Index (conditional)
 if (tariff_emp_available && exists("trend_recent")) {
   fig8_data <- trend_recent %>%
     dplyr::select("Date" = date,
                   "Employment index (Dec 2024 = 100)" = actual,
                   "Trend" = trend,
                   "Deviation from trend (%)" = vs_trend)
-  add_tbl_sheet(wb, "F8", fig8_data,
-    title    = fig_excel_title("F8"),
-    subtitle = fig_meta("F8", "subtitle"),
-    source   = fig_meta("F8", "source"))
+  add_tbl_sheet(wb, "F10", fig8_data,
+    title    = fig_excel_title("F10"),
+    subtitle = fig_meta("F10", "subtitle"),
+    source   = fig_meta("F10", "source"))
 }
 
-# Figure 9: Manufacturing Employment Index (conditional)
+# Figure 11: Manufacturing Employment Index (conditional)
 if (tariff_emp_mfg_available && exists("trend_mfg_recent")) {
   fig9_data <- trend_mfg_recent %>%
     dplyr::select("Date" = date,
                   "Manufacturing employment index (Dec 2024 = 100)" = actual,
                   "Trend" = trend,
                   "Deviation from trend (%)" = vs_trend)
-  add_tbl_sheet(wb, "F9", fig9_data,
-    title    = fig_excel_title("F9"),
-    subtitle = fig_meta("F9", "subtitle"),
-    source   = fig_meta("F9", "source"))
+  add_tbl_sheet(wb, "F11", fig9_data,
+    title    = fig_excel_title("F11"),
+    subtitle = fig_meta("F11", "subtitle"),
+    source   = fig_meta("F11", "source"))
 }
 
 # Employment Index Summary Table (conditional)
@@ -2566,30 +2714,30 @@ if (tariff_emp_available && tariff_emp_mfg_available && exists("emp_index_summar
     source   = fig_meta("T_Emp", "source"))
 }
 
-# Figure 10: Industrial Production
+# Figure 12: Industrial Production
 fig10_data <- ip_trend %>%
   dplyr::select("Date" = date,
                 "Industrial production index (Dec 2024 = 100)" = ip_idx,
                 "Trend" = trend,
                 "Deviation from trend (%)" = vs_trend)
-add_tbl_sheet(wb, "F10", fig10_data,
-  title    = fig_excel_title("F10"),
-  subtitle = fig_meta("F10", "subtitle"),
-  source   = fig_meta("F10", "source"))
+add_tbl_sheet(wb, "F12", fig10_data,
+  title    = fig_excel_title("F12"),
+  subtitle = fig_meta("F12", "subtitle"),
+  source   = fig_meta("F12", "source"))
 
-# Figure 11: Exchange Rates (Indexed)
+# Figure 13: Exchange Rates (Indexed)
 if (exists("fx_daily_indexed")) {
   fig11_data <- fx_daily_indexed %>%
     pivot_wider(names_from = currency, values_from = index) %>%
     dplyr::rename("Date" = date)
-  add_tbl_sheet(wb, "F11", fig11_data,
-    title    = fig_excel_title("F11"),
-    subtitle = fig_meta("F11", "subtitle"),
-    source   = fig_meta("F11", "source"),
+  add_tbl_sheet(wb, "F13", fig11_data,
+    title    = fig_excel_title("F13"),
+    subtitle = fig_meta("F13", "subtitle"),
+    source   = fig_meta("F13", "source"),
     date_format = "yyyy-mm-dd")
 }
 
-# Figure 12: Real Imports and Exports (2025 dollars)
+# Figure 14: Real Imports and Exports (2025 dollars)
 fig12_data <- trade_with_trend %>%
   dplyr::select(date,
          imports_real_2025, imports_trend_2025,
@@ -2607,12 +2755,12 @@ fig12_data <- trade_with_trend %>%
     "Imports deviation from trend (%)" = imports_vs_trend,
     "Exports deviation from trend (%)" = exports_vs_trend
   )
-add_tbl_sheet(wb, "F12", fig12_data,
-  title    = fig_excel_title("F12"),
-  subtitle = fig_meta("F12", "subtitle"),
-  source   = fig_meta("F12", "source"))
+add_tbl_sheet(wb, "F14", fig12_data,
+  title    = fig_excel_title("F14"),
+  subtitle = fig_meta("F14", "subtitle"),
+  source   = fig_meta("F14", "source"))
 
-# Figure 13: Trade Deviation + Cumulative Trade Gap
+# Figure 15: Trade Deviation + Cumulative Trade Gap
 fig13_data <- trade_with_trend %>%
   dplyr::select(date, imports_real, imports_trend, exports_real, exports_trend) %>%
   mutate(
@@ -2628,10 +2776,10 @@ fig13_data <- trade_with_trend %>%
     "Imports deviation from trend (%)" = imports_vs_trend_pct,
     "Exports deviation from trend (%)" = exports_vs_trend_pct
   )
-add_tbl_sheet(wb, "F13a", fig13_data,
-  title    = fig_excel_title("F13a"),
-  subtitle = fig_meta("F13a", "subtitle"),
-  source   = fig_meta("F13a", "source"))
+add_tbl_sheet(wb, "F15a", fig13_data,
+  title    = fig_excel_title("F15a"),
+  subtitle = fig_meta("F15a", "subtitle"),
+  source   = fig_meta("F15a", "source"))
 
 fig13b_data <- cumulative_imports %>%
   dplyr::select("Date" = date,
@@ -2639,10 +2787,10 @@ fig13b_data <- cumulative_imports %>%
                 "Imports trend" = imports_trend,
                 "Monthly gap (billions USD)" = monthly_gap,
                 "Cumulative gap (billions USD)" = cumulative_gap)
-add_tbl_sheet(wb, "F13b", fig13b_data,
-  title    = fig_excel_title("F13b"),
-  subtitle = fig_meta("F13b", "subtitle"),
-  source   = fig_meta("F13b", "source"))
+add_tbl_sheet(wb, "F15b", fig13b_data,
+  title    = fig_excel_title("F15b"),
+  subtitle = fig_meta("F15b", "subtitle"),
+  source   = fig_meta("F15b", "source"))
 
 # Figure A1: PCE Prices with Log-Linear Trend
 if (exists("ll_combined")) {
@@ -2730,8 +2878,400 @@ The raw data underlying all figures and tables has been exported to: **`r excel_
 This Excel file contains `r n_sheets` sheets:
 
 - **Data TOC**: Table of contents with hyperlinks to each data sheet
-- **Fig1-Fig13**: Raw data for each figure (indexed values, trends, confidence intervals)
+- **Fig1-Fig15**: Raw data for each figure (indexed values, trends, confidence intervals)
 - **Tables**: Passthrough calculations and employment index summaries
+
+---
+
+## Export Website Assets
+
+```{r export-website, include=FALSE}
+# ==============================================================================
+# WEBSITE EXPORT
+# ==============================================================================
+# Produces two outputs in website/:
+#   1. csv/  — one CSV per figure/table (same data as Excel sheets)
+#   2. html/ — stripped-down HTML with narrative text and figure placeholders
+# ==============================================================================
+
+WEBSITE_DIR <- here("website")
+CSV_DIR     <- file.path(WEBSITE_DIR, "csv")
+HTML_DIR    <- file.path(WEBSITE_DIR, "html")
+dir.create(CSV_DIR,  showWarnings = FALSE, recursive = TRUE)
+dir.create(HTML_DIR, showWarnings = FALSE, recursive = TRUE)
+
+# --- Helper: write a CSV with metadata header rows ---
+write_website_csv <- function(data, filename, fig_id) {
+  path <- file.path(CSV_DIR, filename)
+  tryCatch({
+    # Write metadata as comment lines, then data
+    meta_lines <- c(
+      paste0("# ", fig_meta(fig_id, "label"), ". ", fig_meta(fig_id, "title")),
+      paste0("# ", fig_meta(fig_id, "subtitle")),
+      paste0("# Source: ", fig_meta(fig_id, "source"))
+    )
+    notes <- fig_meta(fig_id, "notes")
+    if (nzchar(notes)) meta_lines <- c(meta_lines, paste0("# Note: ", notes))
+    writeLines(meta_lines, path)
+    write.table(data, path, append = TRUE, sep = ",", row.names = FALSE,
+                quote = TRUE, na = "")
+    TRUE
+  }, error = function(e) {
+    message(paste("Could not write CSV", filename, ":", e$message))
+    FALSE
+  })
+}
+
+# --- CSV exports (mirrors Excel export section) ---
+
+# F1: Customs Duty Revenue
+write_website_csv(fig1_data, "F1_customs_duty_revenue.csv", "F1")
+
+# F2: Effective Tariff Rate
+write_website_csv(fig2_data, "F2_effective_tariff_rate.csv", "F2")
+
+# F3: Daily ETR
+if (daily_etr_available && exists("fig3_data")) {
+  write_website_csv(fig3_data, "F3_daily_etr.csv", "F3")
+}
+
+# F4: Daily ETR by Authority
+if (daily_etr_available && exists("fig4_data")) {
+  write_website_csv(fig4_data, "F4_daily_etr_by_authority.csv", "F4")
+}
+
+# F5: PCE Prices with LP Trend
+fig5_csv <- pce_combined %>%
+  dplyr::select("Date" = date,
+         "Core goods index (December 2024 = 100)" = core_goods_idx,
+         "Core goods trend (pre-2025)" = core_trend,
+         "Core goods trend, lower bound" = core_lower,
+         "Core goods trend, upper bound" = core_upper,
+         "Durable goods index (December 2024 = 100)" = durables_idx,
+         "Durable goods trend (pre-2025)" = dur_trend,
+         "Durable goods trend, lower bound" = dur_lower,
+         "Durable goods trend, upper bound" = dur_upper,
+         "Forecast indicator" = is_forecast)
+write_website_csv(fig5_csv, "F5_pce_prices_lp_trend.csv", "F5")
+
+# F6: PCE Deviation from Trend
+fig6_csv <- pce_for_fig4 %>%
+  filter(date >= "2024-12-01") %>%
+  dplyr::select("Date" = date,
+                "Core goods deviation from trend (%)" = core_goods_vs_trend,
+                "Durable goods deviation from trend (%)" = dur_vs_trend)
+write_website_csv(fig6_csv, "F6_pce_deviation_from_trend.csv", "F6")
+
+# T1a: IPI Passthrough (June 2025)
+if (ipi_available && exists("ipi_passthrough_jun")) {
+  write_website_csv(tab1a_data, "T1a_ipi_passthrough_jun2025.csv", "T1a")
+}
+
+# T1b: IPI Passthrough (latest)
+if (ipi_available && exists("ipi_passthrough")) {
+  write_website_csv(tab1b_data, "T1b_ipi_passthrough_latest.csv", "T1b")
+}
+
+# F7: Imported PCE Prices
+if (ipi_available && exists("ipi_combined")) {
+  fig7_csv <- ipi_combined %>%
+    dplyr::select("Date" = date,
+           "Imported core goods index (Dec 2024 = 100)" = core_goods_idx,
+           "Imported core goods trend (pre-2025)" = core_trend,
+           "Imported core goods trend, lower bound" = core_lower,
+           "Imported core goods trend, upper bound" = core_upper,
+           "Imported durables index (Dec 2024 = 100)" = durables_idx,
+           "Imported durables trend (pre-2025)" = dur_trend,
+           "Imported durables trend, lower bound" = dur_lower,
+           "Imported durables trend, upper bound" = dur_upper,
+           "Forecast indicator" = is_forecast)
+  write_website_csv(fig7_csv, "F7_imported_pce_prices.csv", "F7")
+
+  fig8_csv <- ipi_for_fig6 %>%
+    filter(date >= "2024-12-01") %>%
+    dplyr::select("Date" = date,
+           "Imported core goods deviation from trend (%)" = core_goods_vs_trend,
+           "Imported durables deviation from trend (%)" = durables_vs_trend)
+  write_website_csv(fig8_csv, "F8_imported_pce_deviation.csv", "F8")
+}
+
+# F9: Import Prices
+fig9_csv <- import_trend %>%
+  dplyr::select("Date" = date,
+                "Import price index (Dec 2024 = 100)" = import_idx,
+                "Trend" = trend,
+                "Deviation from trend (%)" = vs_trend)
+write_website_csv(fig9_csv, "F9_import_prices.csv", "F9")
+
+# F10: Employment Index
+if (tariff_emp_available && exists("trend_recent")) {
+  fig10_csv <- trend_recent %>%
+    dplyr::select("Date" = date,
+                  "Employment index (Dec 2024 = 100)" = actual,
+                  "Trend" = trend,
+                  "Deviation from trend (%)" = vs_trend)
+  write_website_csv(fig10_csv, "F10_employment_index.csv", "F10")
+}
+
+# F11: Manufacturing Employment Index
+if (tariff_emp_mfg_available && exists("trend_mfg_recent")) {
+  fig11_csv <- trend_mfg_recent %>%
+    dplyr::select("Date" = date,
+                  "Manufacturing employment index (Dec 2024 = 100)" = actual,
+                  "Trend" = trend,
+                  "Deviation from trend (%)" = vs_trend)
+  write_website_csv(fig11_csv, "F11_manufacturing_employment_index.csv", "F11")
+}
+
+# T_Emp: Employment Summary
+if (tariff_emp_available && tariff_emp_mfg_available && exists("emp_index_summary")) {
+  write_website_csv(emp_index_summary, "T_Emp_employment_summary.csv", "T_Emp")
+}
+
+# F12: Industrial Production
+fig12_csv <- ip_trend %>%
+  dplyr::select("Date" = date,
+                "Industrial production index (Dec 2024 = 100)" = ip_idx,
+                "Trend" = trend,
+                "Deviation from trend (%)" = vs_trend)
+write_website_csv(fig12_csv, "F12_industrial_production.csv", "F12")
+
+# F13: Exchange Rates
+if (exists("fx_daily_indexed")) {
+  fig13_csv <- fx_daily_indexed %>%
+    pivot_wider(names_from = currency, values_from = index) %>%
+    dplyr::rename("Date" = date)
+  write_website_csv(fig13_csv, "F13_exchange_rates.csv", "F13")
+}
+
+# F14: Real Imports and Exports
+write_website_csv(fig12_data, "F14_real_imports_exports.csv", "F14")
+
+# F15a: Trade Deviation from Trend
+write_website_csv(fig13_data, "F15a_trade_deviation.csv", "F15a")
+
+# F15b: Cumulative Import Gap
+write_website_csv(fig13b_data, "F15b_cumulative_import_gap.csv", "F15b")
+
+# TA1: All-PCE Passthrough (June 2025)
+write_website_csv(tblA1_data, "TA1_pce_passthrough_jun2025.csv", "TA1")
+
+# TA2: All-PCE Passthrough (latest)
+write_website_csv(tblA2_data, "TA2_pce_passthrough_latest.csv", "TA2")
+
+# FA1: PCE Prices with Log-Linear Trend
+if (exists("ll_combined")) {
+  figA1_csv <- ll_combined %>%
+    dplyr::select("Date" = date,
+           "Core goods index (December 2024 = 100)" = core_goods_idx,
+           "Core goods trend (log-linear)" = core_trend,
+           "Core goods trend, lower bound" = core_lower,
+           "Core goods trend, upper bound" = core_upper,
+           "Durable goods index (December 2024 = 100)" = durables_idx,
+           "Durable goods trend (log-linear)" = dur_trend,
+           "Durable goods trend, lower bound" = dur_lower,
+           "Durable goods trend, upper bound" = dur_upper,
+           "Forecast indicator" = is_forecast)
+  write_website_csv(figA1_csv, "FA1_pce_prices_loglinear_trend.csv", "FA1")
+}
+
+# FA2: Deviation from Log-Linear Trend
+if (exists("ll_deviations")) {
+  figA2_csv <- ll_deviations %>%
+    dplyr::select("Date" = date,
+                  "Core goods deviation from trend (%)" = core_goods_vs_trend,
+                  "Durable goods deviation from trend (%)" = durables_vs_trend)
+  write_website_csv(figA2_csv, "FA2_pce_deviation_loglinear.csv", "FA2")
+}
+
+website_csv_count <- length(list.files(CSV_DIR, pattern = "\\.csv$"))
+
+# --- Stripped-down HTML with narrative text and figure placeholders ---
+
+# Helper: build a figure/table placeholder div
+fig_placeholder <- function(fig_id, csv_file = NULL) {
+  meta <- FIGURE_METADATA[[fig_id]]
+  label <- meta$label
+  title <- meta$title
+  subtitle <- if (!is.null(meta$subtitle)) meta$subtitle else ""
+  csv_attr <- if (!is.null(csv_file)) paste0(' data-csv="', csv_file, '"') else ""
+  paste0(
+    '<div class="figure-placeholder" id="', tolower(gsub("[^A-Za-z0-9]", "-", fig_id)),
+    '" data-figure-id="', fig_id, '"', csv_attr, '>\n',
+    '  <p class="figure-label">', label, '. ', title, '</p>\n',
+    if (nzchar(subtitle)) paste0('  <p class="figure-subtitle">', subtitle, '</p>\n') else "",
+    '</div>\n'
+  )
+}
+
+# Build HTML content
+html_parts <- list()
+
+html_parts$header <- paste0(
+  '<article class="tariff-impacts-report">\n',
+  '<p class="report-date">Updated: ', format(Sys.Date(), "%B %d, %Y"), '</p>\n\n'
+)
+
+# --- Key Takeaways ---
+html_parts$takeaways <- paste0(
+  '<section id="key-takeaways">\n',
+  '<h2>Key Takeaways</h2>\n',
+  '<ul>\n',
+  '<li><strong>Updated economic indicators:</strong> This report reviews economic indicators that are related to the effect of Tariffs on the US Economy as of ', format_date_long(), '. For the most part, given data lags, the findings reflect the conditions prior to the SCOTUS decision repealing IEEPA Tariffs on February 20th, 2026.</li>\n',
+  '<li><strong>Tariff revenue:</strong> The 2025 tariffs have raised an estimated $', safe_fmt(total_excess_rev), ' billion in inflation-adjusted customs revenue above the 2022&ndash;2024 average as of ', latest_month_name, ', with the effective tariff rate reaching ', safe_fmt(latest_tariff_rate), '% in ', latest_tariff_month, '.</li>\n',
+  '<li><strong>Pass-through to consumer prices:</strong> Imported PCE core goods and durable goods prices have risen ', safe_fmt(tk_ipi_ytd_core), '% and ', safe_fmt(tk_ipi_ytd_dur), '% respectively during 2025 through ', data_month_name, ', both well above prior-year comparisons. Implied passthrough of tariffs to imported consumer goods prices ranges from roughly ', safe_fmt(tk_ipi_core_low, "%.0f"), '&ndash;', safe_fmt(tk_ipi_core_high, "%.0f"), '% for core goods and ', safe_fmt(tk_ipi_dur_low, "%.0f"), '&ndash;', safe_fmt(tk_ipi_dur_high, "%.0f"), '% for durables, depending on methodology (see Tables 1a&ndash;1b).</li>\n',
+  '<li><strong>Employment:</strong> There is no definitive indication of a significant aggregate labor market effect so far, though tariff-exposed industries show some signs of weakness relative to pre-2025 trend.</li>\n',
+  '</ul>\n',
+  '</section>\n\n'
+)
+
+# --- Introduction ---
+html_parts$intro <- paste0(
+  '<section id="introduction">\n',
+  '<h2>Introduction</h2>\n',
+  '<p>In response to new tariff announcements, The Budget Lab (TBL) regularly estimates fiscal and macroeconomic effects resulting from policy; TBL published its latest report on <a href="https://budgetlab.yale.edu/research/state-tariffs-february-21-2026">February 21st</a>, and we aim to update these projections as we refine our methodology and as policies change. These analyses rely on projections from well-respected economic and trade models, including the MA/US macroeconometric model (currently maintained by S&amp;P Global) for short-run analysis and the Global Trade Analysis Project (GTAP) model for medium/long-run analysis.</p>\n',
+  '<p>One year after the initial wave of new tariffs, this report updates a <a href="https://budgetlab.yale.edu/research/short-run-effects-2025-tariffs-so-far">September 2025</a> assessment of how actual economic indicators have responded to tariff changes. This provides a check on the assumptions made by economic models, as well as a real-time assessment of how tariffs are impacting the US economy. Most of these indicators are updated monthly, and going forward this report will be released on that same schedule. In particular, we consider the impact of tariffs on revenues, prices, trade, and labor markets. Critically, these are not causal estimates of the effect of tariffs on the economy, but rather constitute a descriptive attempt to explore how the economy is changing with tariffs. There are a number of other economic changes happening concurrently, including but not limited to the growth of generative AI and the passage of the One Big Beautiful Bill Act, which we do not control for in the series presented below. This report was updated using data as of ', format_date_long(), '.</p>\n',
+  '<p>Overall, there is evidence, consistent with economic theory, that tariffs have raised both additional revenue ($', safe_fmt(total_excess_rev), ' Billion above the 2022&ndash;2024 average) and led to higher prices (Personal Consumption Expenditure (PCE) core goods up ', safe_fmt(core_ytd_change), '% during 2025 through ', data_month_name, '). There is less clear evidence about the impacts of tariffs on the wider economy: for example, employment in tariff-exposed industries is not appreciably lower or higher than what would have been expected prior to 2025. Importantly, these statistics are representations of the current economy, and it is difficult to disentangle what changed due to tariffs versus the many other economic changes over the past year. It is still early and the effects of tariffs may evolve and change over time as consumers, businesses, and policymakers respond. Importantly, with the exception of currency data, we do not yet have outcomes that reflect the economic reality after the Supreme Court decision rolling back the President&rsquo;s authority to use the International Emergency Economic Powers Act (IEEPA) to impose tariffs.</p>\n',
+  '</section>\n\n'
+)
+
+# --- Revenues & Effective Tariff Rates ---
+html_parts$revenue <- paste0(
+  '<section id="revenues-effective-tariff-rates">\n',
+  '<h2>Revenues &amp; Effective Tariff Rates</h2>\n',
+  '<p>Tariffs are a tax on imports, therefore higher tariffs will increase revenues if their effect on imports is not sufficiently prohibitive. Before the 2025 tariff announcements, the average effective US tariff rate was ', safe_fmt(pre_2025_tariff_rate), '% (2022&ndash;2024 average), raising $', safe_fmt(pre_2025_monthly_rev), ' billion a month in net customs duty revenues. The new 2025 tariffs have pushed the average effective US rate to ', safe_fmt(latest_tariff_rate), '%, and have raised roughly $', safe_fmt(total_excess_rev), ' billion in revenues so far (after accounting for the 2022&ndash;2024 average), with $', safe_fmt(excess_rev_2025_only), ' billion collected over the course of 2025 and about $', safe_fmt(latest_month_rev), ' billion of that new tariff revenue posted in ', latest_month_name, ' alone.</p>\n',
+  '<p>However, the revenue landscape has shifted significantly. On February 20th, 2026, the Supreme Court ruled 6&ndash;3 in <em>Learning Resources, Inc. v. Trump</em> that the use of IEEPA to impose tariffs exceeded presidential authority, striking down all IEEPA-based tariffs&mdash;including the reciprocal, fentanyl, and universal baseline tariff regimes. Tariffs imposed using other authorities remain in effect, and the questions of legality and implementation of IEEPA refunds remains uncertain. This means that some or all of the IEEPA revenue collected to date may ultimately be returned to importers. Our back-of-the-envelope estimate, projecting forward using the average of observed FY 2026 CBP collections as of December 14th (the same methodology behind our earlier $142 billion figure), puts total IEEPA revenue at roughly $168 billion through February 19th, 2026. The customs revenue data presented in this report do not yet cover the post-SCOTUS period, and substantial uncertainty remains: the ultimate fiscal impact will depend on the resolution of refund litigation, the duration and scope of the replacement Section 122 tariffs, and any further legislative or executive action.</p>\n',
+  '<p>The tariff revenue and rate numbers reported here are a different measure than the numbers reported in TBL&rsquo;s State of Tariff Report. The effective tariff rates (ETRs) reported here are actual tariff duties divided by the value of customs, meaning that they incorporate any avoidance behavior by firms, importers, or other actors. The effective tariff rates reported in TBL&rsquo;s State of Tariff Report are model-based estimates of the average rates across sectors, weighted by 2024 trade flows. In that report, we include two measures of average ETRs: pre-substitution and post-substitution. In our modeling of the general revenue effects of tariffs, our last pre-SCOTUS estimate of tariff revenue was projected to raise $246 billion in annual revenue for fiscal year (FY) 2026 (conventionally). This is lower than the annualized revenue we would expect if monthly tariff revenue remained at its current level (2-month average of ', annualized_rev_months, ' projected forward) for the rest of the fiscal year ($', safe_fmt(annualized_rev, "%.0f"), ' billion). However, the revenue estimates in the State of Tariff Report account for decreases in other revenue sources, like federal payroll and corporate income taxes, following the methodology of the <a href="https://www.cbo.gov/publication/58549">U.S. Congressional Budget Office</a>. Adjusting for that gives us a simulated annual revenue of $319 billion, notably closer to the annualized tariff revenue level suggested by the customs data.</p>\n',
+  '\n',
+  fig_placeholder("F1", "F1_customs_duty_revenue.csv"),
+  fig_placeholder("F2", "F2_effective_tariff_rate.csv"),
+  if (daily_etr_available) fig_placeholder("F3", "F3_daily_etr.csv") else "",
+  if (daily_etr_available) fig_placeholder("F4", "F4_daily_etr_by_authority.csv") else "",
+  '</section>\n\n'
+)
+
+# --- Prices and Consumer Passthrough ---
+html_parts$prices <- paste0(
+  '<section id="prices-consumer-passthrough">\n',
+  '<h2>Prices and Consumer Passthrough</h2>\n',
+  '<p>One of the most debated questions around tariffs is to what extent they are leading to higher consumer prices. Tariffs are taxes that add to the cost of imported goods. Different groups can bear this cost, or incidence: foreign producers (in the form of accepting lower prices on their exports), American importers and businesses (in the form of lower profit margins), and American consumers (in the form of lower real after-tax incomes). Moreover, tariffs reduce productivity and thereby real U.S. income (even when including tariff revenue) by reducing the efficiency of resource allocation across countries and increasing the marginal cost of investment. After-tax real incomes in turn can fall either from a rise in realized prices, holding nominal income constant, or a fall in nominal income.</p>\n',
+  '\n',
+  '<h3>Overall Goods Prices</h3>\n',
+  '<p>One possible indication that tariffs are raising consumer goods prices is that goods prices have increased since the beginning of the year, both in absolute terms and against reasonable estimates of pre-2025 trend. We estimate the pre-2025 trend using a local projection method with recession and pandemic controls. See the <a href="', meth_link, '">', meth_text, '</a> for full details. We find similar differences when the trend is calculated using a simple log-linear approach. During 2025 through ', data_month_name, ', PCE core goods prices (goods excluding volatile food &amp; energy components) rose ', safe_fmt(core_ytd_change), '%, versus ', safe_fmt(core_2023_change), '% over the same ', months_since_2025, '-month period starting in 2023. The difference is even starker with PCE durable goods prices, which rose ', safe_fmt(dur_ytd_change), '%, versus ', safe_fmt(dur_2023_change), '% over the same period starting in 2023. Core goods and durable goods were ', safe_fmt(latest_core_dev), '% and ', safe_fmt(latest_dur_dev), '% above TBL&rsquo;s estimate of pre-2025 trend in ', latest_pce_date, '.</p>\n',
+  '<p>Versions of Figures 5 and 6 using the log-linear trend approach are included in the <a href="#appendix">Appendix below</a>.</p>\n',
+  '\n',
+  fig_placeholder("F5", "F5_pce_prices_lp_trend.csv"),
+  fig_placeholder("F6", "F6_pce_deviation_from_trend.csv"),
+  '\n',
+  '<h3>Imported PCE Goods Prices</h3>\n',
+  '<p>When we construct a price index that reweights standard PCE component price indices by their import content&mdash;weighting categories like electronics, motor vehicles, and apparel more heavily, and domestic-heavy categories less&mdash;the deviation remains, though it is less extreme for core goods. This <strong>Imported PCE Goods Price Index</strong> measures price changes in the goods most exposed to imports and therefore tariffs. As of ', latest_pce_date, ', the imported core goods index is ', if (ipi_available) safe_fmt(latest_ipi_core_dev) else "N/A", '% above trend and the imported durables index is ', if (ipi_available) safe_fmt(latest_ipi_dur_dev) else "N/A", '% above trend, compared to ', safe_fmt(latest_core_dev), '% and ', safe_fmt(latest_dur_dev), '% for the standard PCE indices. See the <a href="', meth_link, '">', meth_text, '</a> for details on index construction.</p>\n',
+  '\n',
+  if (ipi_available) fig_placeholder("F7", "F7_imported_pce_prices.csv") else "",
+  if (ipi_available) fig_placeholder("F8", "F8_imported_pce_deviation.csv") else "",
+  '\n',
+  '<h3>Implied Consumer Passthrough</h3>\n',
+  '<p>In its modeling, TBL assumes that passthrough of tariffs to consumer prices will ultimately reach 100%. This is partially an assumption of convenience, but it is also rooted in studies of the 2018 tariffs, such as <a href="https://www.aeaweb.org/articles?id=10.1257/aer.20190611">Flaaen, Hortacsu &amp; Tintelnot (2020)</a> and <a href="https://www.usitc.gov/publications/332/pub5405.pdf">USITC (2023)</a>. However, both of these studies primarily focus on much narrower tariff increases, rather than the broader and more aggressive increases over the last year. The 2025 tariffs also come after a period of inflation, which may have changed how price-sensitive consumers are. In this context, comparing the rise in overall goods prices against what we would mechanically expect given the rise in tariffs, we can estimate an implied &ldquo;spot&rdquo; passthrough of actual tariffs to consumer prices as of ', data_month, '.</p>\n',
+  '<p>In <a href="https://budgetlab.yale.edu/research/state-us-tariffs-november-17-2025">November 2025</a> (the month of the latest detailed Census trade data), the statutory fully-phased-in average tariff policy rate was 16.8%, but as mentioned earlier, there are several reasons why it takes time for tariff policy to fully flow through into realized revenues. We therefore use as our basis the actual average effective tariff rate, which was ', sprintf("%.1f%%", nov_2025_rate), ' that month. But this rate, calculated based on all revenues and imports, includes products and content that will not ultimately be purchased by consumers, such as business investment and exports. TBL therefore calculated average tariff rates on imported consumer goods. For imported core PCE goods, the average import-weighted effective tariff rate was ', sprintf("%.1f%%", tau_core_recent), ' in the most recent month, up from a 2022&ndash;2024 average of roughly ', sprintf("%.1f%%", tau_baseline_pct), ' (the 2025 annual average was ', sprintf("%.1f%%", tau_core_2025), '). For just imported PCE durables, the most-recent-month rate was ', sprintf("%.1f%%", tau_dur_recent), ', up from roughly ', sprintf("%.1f%%", tau_baseline_pct), ' (2025 annual average: ', sprintf("%.1f%%", tau_dur_2025), '). Given these shifts and the import share of PCE (total import content&mdash;including indirect imports through the supply chain&mdash;is ', sprintf("%.1f%%", IMPORT_SHARE_CORE_GOODS * 100), ' of core goods spending; see <a href="', meth_link, '">', meth_text, '</a>), we would expect full passthrough price effects from the actual tariff increases in 2025 so far to add ', sprintf("%.1f", ipi_expected_core), ' and ', sprintf("%.1f", ipi_expected_dur), ' percentage points through ', data_month, ' for core goods and durables prices, respectively.</p>\n',
+  '<p>We estimate the rise in imported core goods and durable prices in three ways. The first, and our preferred approach, uses the trend estimates reported in Figure 7 as the counterfactual level of prices but-for tariffs. The second approach uses data from 2023-2024 to project forward pre-2025 prices. The third approach moves away from relying on estimating trends, and rather assumes that prices would have remained at their December 2024 level. It therefore uses the change in prices during 2025 through ', data_month_name, '. We think that this approach underestimates true price increases from the tariffs by ignoring counterfactuals, but provides an easy lower-bound estimate.</p>\n',
+  '<p>The results of each are shown below, with one table for June 2025 and one for the most recent month of data, ', data_month, '. Tables 1a and 1b use these category-specific tariff rates rather than the economy-wide effective rate, since the tariff burden varies across consumer goods categories. Passthrough tables using overall PCE prices (as opposed to the imported goods) are available in the <a href="#appendix">Appendix below</a>.</p>\n',
+  '<p>Using our preferred LP trend method, the implied passthrough of tariffs to imported core goods prices through ', data_month, ' is ', fmt_pt(ipi_pt_core_lp), ', and the implied passthrough to imported durables prices is ', fmt_pt(ipi_pt_dur_lp), '. The larger durable passthrough rate is due both to a lower import share and a more aggressive pre-2025 downward trend in prices. The simpler log-linear trend yields very similar passthrough estimates of ', fmt_pt(ipi_pt_core_ll), ' for core goods and ', fmt_pt(ipi_pt_dur_ll), ' for durables. The most conservative method&mdash;raw price changes during 2025 through ', data_month_name, ' with no trend adjustment&mdash;gives ', fmt_pt(ipi_pt_core_simple), ' and ', fmt_pt(ipi_pt_dur_simple), ' for core goods and durables, respectively. All in all, the story is fairly consistent for imported core goods, with somewhere between ', fmt_pt(min(ipi_pt_core_simple, ipi_pt_core_lp, ipi_pt_core_ll, na.rm = TRUE)), ' and ', fmt_pt(max(ipi_pt_core_simple, ipi_pt_core_lp, ipi_pt_core_ll, na.rm = TRUE)), ' passthrough of tariffs. The story is more mixed for durable goods, due primarily to the uncertainty around the counterfactual level of prices but for tariffs. At the June 2025 mark, the LP passthrough estimates were ', fmt_pt(ipi_pt_core_lp_jun), ' for core goods and ', fmt_pt(ipi_pt_dur_lp_jun), ' for durables. The estimates of passthrough of imported core goods have remained relatively constant over time, but implied passthrough of durable goods has now reached over 100 percent, versus ', fmt_pt(ipi_pt_dur_simple_jun), '&ndash;', fmt_pt(ipi_pt_dur_ll_jun), ' in June 2025. These estimates of passthrough are larger than those found by other researchers, but not unreasonably so. For example, <a href="https://www.pricinglab.org/files/TrackingTariffs_Cavallo_Llamas_Vazquez.pdf">Cavallo, Llamas, and Vazquez (2026)</a> estimate that the passthrough to retail prices was 24 percent in October 2025.</p>\n',
+  '\n',
+  if (ipi_available) fig_placeholder("T1a", "T1a_ipi_passthrough_jun2025.csv") else "",
+  if (ipi_available) fig_placeholder("T1b", "T1b_ipi_passthrough_latest.csv") else "",
+  '\n',
+  '<h3>Import Prices</h3>\n',
+  '<p>As noted above, there are other groups beyond US consumers that might bear the burden of tariffs. For some of these groups (e.g. firms and their shareholders) it is difficult to observe these effects directly. However, we can observe import prices: if foreign producers are willing to accept lower prices on their exports, the incidence of tariffs could fall, at least in part, on them. Below, we plot non-petroleum import prices, and find no evidence of a reduction in prices as a response to tariffs. This is a noisy series, so a response is possible: potentially import prices would have continued on their 2024 trajectory. But there is no clear evidence of a reduction in these prices.</p>\n',
+  '\n',
+  fig_placeholder("F9", "F9_import_prices.csv"),
+  '</section>\n\n'
+)
+
+# --- The Labor Market ---
+html_parts$labor <- paste0(
+  '<section id="labor-market">\n',
+  '<h2>The Labor Market</h2>\n',
+  '<p>So far, there is no definitive indication of any effect of tariffs on the aggregate job market. Total non-farm employment as of ', unemp_latest_date, ' changed by ', safe_fmt(nonfarm_yoy_change / 1000, "%+.1f"), 'M jobs relative to the level of employment one year earlier. This is lower than that same statistic from one year prior (', safe_fmt(nonfarm_yoy_change_prior / 1000, "%+.1f"), 'M).</p>\n',
+  '<p>However, the overall labor market might not be as affected as certain industries that are more exposed to tariffs. We therefore construct indices of tariff-sensitive employment, which measure employment weighted by industry-level tariff exposure.</p>\n',
+  '<p>Looking at the overall index, there is some evidence of weakening employment during 2025: the index changed by ', safe_fmt(emp_idx_ytd_pct), '% during 2025 through ', emp_month_name, ', which is ', safe_fmt(abs(emp_shortfall_vs_trend)), '% less than the pre-2025 trend would have predicted, and ', safe_fmt(abs(emp_shortfall_vs_2024)), '% less than the growth rate in 2024 over the same period. When we just look at tariff-sensitive manufacturing employment, the manufacturing index changed by ', safe_fmt(mfg_idx_ytd_pct), '%, versus the trend&rsquo;s ', safe_fmt(mfg_trend_predicted_change), '% predicted change. In other words, there are some indications of weakness in tariff-exposed employment overall, but not in the manufacturing sector. It is worth noting, however, that both of these comparisons are illustrative only, and more rigorous work is necessary to determine the short-term effects of tariffs on employment.</p>\n',
+  '\n',
+  if (tariff_emp_available) fig_placeholder("F10", "F10_employment_index.csv") else "",
+  if (tariff_emp_mfg_available) fig_placeholder("F11", "F11_manufacturing_employment_index.csv") else "",
+  '</section>\n\n'
+)
+
+# --- Industrial Output ---
+html_parts$industrial <- paste0(
+  '<section id="industrial-output">\n',
+  '<h2>Industrial Output</h2>\n',
+  '<p>Building on the analysis of tariff-sensitive manufacturing employment above, we also consider the evolution of industrial production in this same sector. The manufacturing industrial production index is constructed by the Federal Reserve Board and measures real output of manufacturing industries. We plot the index from 2021 onward, and find that during 2025 through ', ip_month_name, ', the index has changed by ', safe_fmt(ip_ytd_pct, "%+.1f"), '%, though it is worth noting it is possible this is due to mean-reversion rather than to any tariff-related effect. In this case, the 2-year pre-trend plotted below may not be the appropriate counterfactual.</p>\n',
+  '\n',
+  fig_placeholder("F12", "F12_industrial_production.csv"),
+  '</section>\n\n'
+)
+
+# --- The Strength of the US Dollar ---
+html_parts$dollar <- paste0(
+  '<section id="us-dollar">\n',
+  '<h2>The Strength of the US Dollar</h2>\n',
+  '<p>A conventional assumption in economics is that tariffs, when faced with incomplete retaliation from other countries, will cause either an appreciation in the levying country&rsquo;s currency and/or a depreciation in the currencies of the other countries. This is because the relative demand for the levying country&rsquo;s currency rises as their consumers and businesses buy fewer imports. The <a href="https://budgetlab.yale.edu/research/short-run-effects-2025-tariffs-so-far">Budget Lab&rsquo;s tariff modeling</a> has assumed that currency adjustments offset roughly one-third of the cost of US tariffs to US consumers &amp; businesses without foreign retaliation.</p>\n',
+  '<p>The reality, however, has been different so far. As of ', fx_latest_date, ', the US dollar is ', safe_fmt(abs(twi_vs_dec)), '% ', if (!is.na(twi_vs_dec) && twi_vs_dec < 0) "weaker" else "stronger", ' than its December 2024 average. There&rsquo;s also been inconsistent depreciation among the targets of US tariffs. China&rsquo;s yuan is ', safe_fmt(abs(cny_vs_dec)), '% ', if (!is.na(cny_vs_dec) && cny_vs_dec >= 0) "stronger" else "weaker", ' than its December 2024 average, while Canada&rsquo;s dollar is ', safe_fmt(abs(cad_vs_dec)), '% ', if (!is.na(cad_vs_dec) && cad_vs_dec >= 0) "stronger" else "weaker", ' over the same period. Mexico&rsquo;s peso is ', safe_fmt(abs(mxn_vs_dec)), '% ', if (!is.na(mxn_vs_dec) && mxn_vs_dec >= 0) "stronger" else "weaker", ' than December 2024, though this is not out of the range of pre-2025 variation, making it difficult to establish any causal claim.</p>\n',
+  '<p>These currency movements will affect the price of imports for consumers. While stronger currencies make imported goods cheaper for residents, weaker currencies have the opposite effect, making imports more expensive. A ', if (!is.na(twi_vs_dec) && twi_vs_dec < 0) "weakening" else "strengthening", ' US dollar ', if (!is.na(twi_vs_dec) && twi_vs_dec < 0) "exacerbates the price impact of tariffs by making all imports more expensive in dollar terms" else "partially offsets the price impact of tariffs by making imports cheaper in dollar terms", '.</p>\n',
+  '<p>It is unclear what explains these currency movements. As a first order effect, US tariffs may indeed be putting upward pressure on the US dollar but other factors, like a deteriorating economic outlook, shifting views on the credibility of US institutions, the role of the US dollar in the global economy, and expectations of lower interest rates, are likely exerting downward pressure. The real trade-weighted dollar also entered 2025 roughly ', safe_fmt(twi_dec_vs_longrun), '% stronger than its long-run average level (2000&ndash;2024), so mean reversion may also be a factor in dollar movement.</p>\n',
+  '\n',
+  fig_placeholder("F13", "F13_exchange_rates.csv"),
+  '</section>\n\n'
+)
+
+# --- Imports & Exports ---
+html_parts$trade <- paste0(
+  '<section id="imports-exports">\n',
+  '<h2>Imports &amp; Exports</h2>\n',
+  '<p>A country&rsquo;s trade deficit, or the amount by which their imports from other countries exceed their exports to those countries, can be impacted by tariffs if the higher prices of non-domestic goods induces a shift in purchasing by consumers and businesses. However, if the currency of the levying country appreciates as a result of tariffs, this will drive down the relative price of imports, meaning that any sort of persistent reduction in the trade deficit due to tariffs is unlikely in the long run. We are still in the early days of any such transition, and, as noted above, the changes in the value of the dollar might be driven by other factors, meaning that the expected offsetting effects of a (relatively) stronger dollar might not materialize. It is therefore difficult to evaluate the medium-to-long-term effects of tariffs on the trade deficit.</p>\n',
+  '<p>There are, however, some notable dynamics in the short-term reaction of imports over the last year. First, real imports grew ', safe_fmt(mar_imports_vs_trend), '% over the pre-2025 trend between December 2024 and March 2025, equal to $', safe_fmt(mar_imports_excess), ' billion in real 2025 dollars, as consumers and businesses sought to make purchases ahead of tariffs taking effect. Starting in April, imports declined, and as of ', trade_latest_date, ' imports have been on average ', safe_fmt(post_apr_avg_imports_vs_trend), '% ', if (!is.na(post_apr_avg_imports_vs_trend) && post_apr_avg_imports_vs_trend < 0) "below" else "above", ' the pre-2025 trend. Real exports ', if (!is.na(exports_latest_vs_trend) && exports_latest_vs_trend < 0) "fell" else "rose", ' more modestly (in absolute terms) than imports, and are ', safe_fmt(abs(exports_latest_vs_trend)), '% ', exports_dir, ' trend as of ', trade_latest_date, '.</p>\n',
+  '<p>Cumulatively, as of ', trade_latest_date, ', cumulative imports are still ', if (!is.na(cum_imports_total) && cum_imports_total > 0) "up" else "down", ' by $', safe_fmt(abs(cum_imports_total)), ' billion (real 2025 USD) from December 2024 relative to trend. This has implications for the discussion of stockpiling: this very rough measure of imports implies that the ability of firms to rely on pre-tariff stocks of goods will degrade shortly.</p>\n',
+  '\n',
+  fig_placeholder("F14", "F14_real_imports_exports.csv"),
+  fig_placeholder("F15a", "F15a_trade_deviation.csv"),
+  fig_placeholder("F15b", "F15b_cumulative_import_gap.csv"),
+  '</section>\n\n'
+)
+
+# --- Data Sources ---
+html_parts$sources <- paste0(
+  '<section id="data-sources">\n',
+  '<h2>Data Sources</h2>\n',
+  '<p>All data in this report is pulled directly from Haver Analytics databases:</p>\n',
+  '<ul>\n',
+  '<li><strong>USECON</strong>: U.S. Economic data</li>\n',
+  '<li><strong>USNA</strong>: National Accounts (PCE price indices)</li>\n',
+  '<li><strong>USTRADE</strong>: Trade data by country</li>\n',
+  '<li><strong>USINT</strong>: International trade</li>\n',
+  '<li><strong>LABOR</strong>: Employment by industry</li>\n',
+  '</ul>\n',
+  '</section>\n\n'
+)
+
+# --- Appendix ---
+html_parts$appendix <- paste0(
+  '<section id="appendix">\n',
+  '<h2>Appendix</h2>\n',
+  '<p><strong>Note:</strong> Tables A1&ndash;A2 use overall PCE price indices (domestic + imported) rather than the import-weighted index used in the main text Tables 1a&ndash;1b.</p>\n',
+  '\n',
+  fig_placeholder("TA1", "TA1_pce_passthrough_jun2025.csv"),
+  fig_placeholder("TA2", "TA2_pce_passthrough_latest.csv"),
+  if (exists("ll_combined")) fig_placeholder("FA1", "FA1_pce_prices_loglinear_trend.csv") else "",
+  if (exists("ll_deviations")) fig_placeholder("FA2", "FA2_pce_deviation_loglinear.csv") else "",
+  '</section>\n\n'
+)
+
+html_parts$footer <- '</article>\n'
+
+# Assemble and write
+html_content <- paste0(unlist(html_parts), collapse = "")
+writeLines(html_content, file.path(HTML_DIR, "tariff_impacts_report.html"))
+```
+
+Website assets exported: `r website_csv_count` CSV files and 1 HTML file to `website/`.
 
 ---
 

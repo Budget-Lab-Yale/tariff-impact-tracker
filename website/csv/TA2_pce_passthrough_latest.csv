@@ -1,0 +1,6 @@
+# Table A2. Implied Consumer Passthrough -- All PCE Goods
+# Economy-wide effective tariff rate
+# Source: Haver Analytics, USITC, The Budget Lab analysis
+"Category","Import share","Tariff increase (pp)","Expected price change under 100% passthrough","Price change, 2025 change","Price change, vs LP trend","Price change, vs Log-Linear","Passthrough, via 2025 change","Passthrough, vs LP trend","Passthrough, vs Log-Linear"
+"Core Goods","32.1%","8.0 pp","2.6%","0.3%","3.4%","2.8%","12%","133%","110%"
+"Durables","28.0%","8.0 pp","2.2%","0.4%","4.1%","4.9%","18%","184%","218%"

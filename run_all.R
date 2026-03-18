@@ -177,6 +177,8 @@ if (!file.exists(here("R", "tariff_impacts_work.R"))) {
 dir.create(here("output"), showWarnings = FALSE, recursive = TRUE)
 dir.create(here("logs"), showWarnings = FALSE, recursive = TRUE)
 dir.create(here("input"), showWarnings = FALSE, recursive = TRUE)
+dir.create(here("website", "csv"), showWarnings = FALSE, recursive = TRUE)
+dir.create(here("website", "html"), showWarnings = FALSE, recursive = TRUE)
 
 log_msg("INFO", paste("Working directory:", here()))
 
