@@ -1,6 +1,3 @@
-# Figure 7. Imported PCE Core Goods & Durables Prices
-# Import-content-weighted index (Dec 2024 = 100) versus local projection with 90% CIs
-# Source: BEA PCE components via Haver Analytics, BEA I-O Tables, and The Budget Lab analysis
 "Date","Imported core goods index (Dec 2024 = 100)","Imported core goods trend (pre-2025)","Imported core goods trend, lower bound","Imported core goods trend, upper bound","Imported durables index (Dec 2024 = 100)","Imported durables trend (pre-2025)","Imported durables trend, lower bound","Imported durables trend, upper bound","Forecast indicator"
 2023-01-01,100.664498551111,102.894792192898,102.061986198536,103.734393722503,103.482559285209,102.9170256403,101.316751363639,104.542575873068,FALSE
 2023-02-01,100.8844824557,102.772652510069,101.960510291112,103.591263654906,103.602472440136,102.780076586832,101.219593874671,104.36461695623,FALSE
@@ -39,3 +36,7 @@
 2025-11-01,101.016842080001,98.9483559684822,98.3732873534976,99.5267863081874,101.022998060205,98.4263479270924,97.3986479158206,99.4648916958061,TRUE
 2025-12-01,101.317804021732,98.8130974234827,98.1798393869983,99.4504399618696,101.364715667475,98.2912442208634,97.159478014382,99.4361938529077,TRUE
 2026-01-01,101.534751562917,98.7111065722932,98.0290860420898,99.3978721432024,101.515989303994,98.1594422325821,96.9312610317111,99.4031852764139,TRUE
+
+# Figure 7. Imported PCE Core Goods & Durables Prices
+# Import-content-weighted index (Dec 2024 = 100) versus local projection with 90% CIs
+# Source: BEA PCE components via Haver Analytics, BEA I-O Tables, and The Budget Lab analysis 

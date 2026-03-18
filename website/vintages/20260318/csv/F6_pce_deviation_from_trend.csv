@@ -1,6 +1,3 @@
-# Figure 6. PCE Goods Prices: Deviation from Trend
-# Percent difference from trend (local projection)
-# Source: Bureau of Economic Analysis via Haver Analytics and The Budget Lab analysis
 "Date","Core goods deviation from trend (%)","Durable goods deviation from trend (%)"
 2024-12-01,0,0
 2025-01-01,0.505185940886621,0.590328760028691
@@ -16,3 +13,7 @@
 2025-11-01,2.48639231254766,2.90661242221946
 2025-12-01,3.00642735629033,3.54625241064355
 2026-01-01,3.41634159255337,4.11359952089974
+
+# Figure 6. PCE Goods Prices: Deviation from Trend
+# Percent difference from trend (local projection)
+# Source: Bureau of Economic Analysis via Haver Analytics and The Budget Lab analysis 

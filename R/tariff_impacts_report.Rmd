@@ -2532,7 +2532,7 @@ if (daily_etr_available) {
 }
 
 # Figure 5: PCE Prices with Trend
-fig3_data <- pce_combined %>%
+fig5_data <- pce_combined %>%
   dplyr::select("Date" = date,
          "Core goods index (December 2024 = 100)" = core_goods_idx,
          "Core goods trend (pre-2025)" = core_trend,
@@ -2543,18 +2543,18 @@ fig3_data <- pce_combined %>%
          "Durable goods trend, lower bound" = dur_lower,
          "Durable goods trend, upper bound" = dur_upper,
          "Forecast indicator" = is_forecast)
-add_tbl_sheet(wb, "F5", fig3_data,
+add_tbl_sheet(wb, "F5", fig5_data,
   title    = fig_excel_title("F5"),
   subtitle = fig_meta("F5", "subtitle"),
   source   = fig_meta("F5", "source"))
 
 # Figure 6: Deviation from Trend
-fig4_data <- pce_for_fig4 %>%
+fig6_data <- pce_for_fig4 %>%
   filter(date >= "2024-12-01") %>%
-  dplyr::select("Date" = date, 
+  dplyr::select("Date" = date,
                 "Core goods deviation from trend (%)" = core_goods_vs_trend,
                 "Durable goods deviation from trend (%)" = dur_vs_trend)
-add_tbl_sheet(wb, "F6", fig4_data,
+add_tbl_sheet(wb, "F6", fig6_data,
   title    = fig_excel_title("F6"),
   subtitle = fig_meta("F6", "subtitle"),
   source   = fig_meta("F6", "source"))
@@ -2916,21 +2916,24 @@ dir.create(HTML_DIR,     showWarnings = FALSE, recursive = TRUE)
 dir.create(VINTAGE_CSV,  showWarnings = FALSE, recursive = TRUE)
 dir.create(VINTAGE_HTML, showWarnings = FALSE, recursive = TRUE)
 
-# --- Helper: write a CSV with metadata header rows (current + vintage) ---
+# --- Helper: write a CSV with metadata notes at the bottom (current + vintage) ---
+# Notes go after data so Datawrapper reads the correct column count from row 1
 write_website_csv <- function(data, filename, fig_id) {
   path <- file.path(CSV_DIR, filename)
   tryCatch({
-    # Write metadata as comment lines, then data
+    # Write data first (header row must be first for Datawrapper)
+    write.table(data, path, sep = ",", row.names = FALSE,
+                quote = TRUE, na = "")
+    # Append metadata as comment lines after data
     meta_lines <- c(
+      "",
       paste0("# ", fig_meta(fig_id, "label"), ". ", fig_meta(fig_id, "title")),
       paste0("# ", fig_meta(fig_id, "subtitle")),
       paste0("# Source: ", fig_meta(fig_id, "source"))
     )
     notes <- fig_meta(fig_id, "notes")
     if (nzchar(notes)) meta_lines <- c(meta_lines, paste0("# Note: ", notes))
-    writeLines(meta_lines, path)
-    write.table(data, path, append = TRUE, sep = ",", row.names = FALSE,
-                quote = TRUE, na = "")
+    cat(paste0(meta_lines, collapse = "\n"), "\n", file = path, append = TRUE)
     # Copy to vintage
     file.copy(path, file.path(VINTAGE_CSV, filename), overwrite = TRUE)
     TRUE

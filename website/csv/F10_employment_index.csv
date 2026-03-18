@@ -1,6 +1,3 @@
-# Figure 10. Tariff-Exposed Employment Index
-# Leontief-adjusted total import content weighting, index (Dec 2024 = 100)
-# Source: BLS via Haver, USITC DataWeb, BEA I-O Tables (including Total Requirements), and The Budget Lab analysis
 "Date","Employment index (Dec 2024 = 100)","Trend","Deviation from trend (%)"
 2023-01-01,99.9779164132285,100.234556485889,-0.256039515370743
 2023-02-01,100.036929745838,100.236901680715,-0.199499317640361
@@ -40,3 +37,7 @@
 2025-12-01,99.6000041885583,100.315125275881,-0.712874639149386
 2026-01-01,99.6333176941297,100.317470470707,-0.681987667120354
 2026-02-01,99.4457248047046,100.319815665533,-0.871304293204411
+
+# Figure 10. Tariff-Exposed Employment Index
+# Leontief-adjusted total import content weighting, index (Dec 2024 = 100)
+# Source: BLS via Haver, USITC DataWeb, BEA I-O Tables (including Total Requirements), and The Budget Lab analysis 

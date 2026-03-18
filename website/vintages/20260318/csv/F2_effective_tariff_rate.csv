@@ -1,6 +1,3 @@
-# Figure 2. Effective Tariff Rate
-# Customs duties as a share of import value
-# Source: U.S. Treasury, Census Bureau via Haver Analytics
 "Date","Customs duties (nominal USD)","Import values (nominal USD)","Effective tariff rate (%)"
 2020-01-01,6918,195796.2,3.53326571200054
 2020-02-01,6286,178108,3.5293192894199
@@ -76,3 +73,7 @@
 2025-12-01,27892,282197,9.88387544871136
 2026-01-01,27742,260537.1,10.6480036816254
 2026-02-01,26594,,
+
+# Figure 2. Effective Tariff Rate
+# Customs duties as a share of import value
+# Source: U.S. Treasury, Census Bureau via Haver Analytics 

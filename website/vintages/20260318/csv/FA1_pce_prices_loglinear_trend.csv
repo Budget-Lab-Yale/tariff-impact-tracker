@@ -1,6 +1,3 @@
-# Figure A1. PCE Core Goods & Durables Prices (Log-Linear Trend)
-# Index (Dec 2024 = 100), log-linear trend (2023-2024 estimation) with 90% CIs
-# Source: Bureau of Economic Analysis via Haver Analytics and The Budget Lab analysis
 "Date","Core goods index (December 2024 = 100)","Core goods trend (log-linear)","Core goods trend, lower bound","Core goods trend, upper bound","Durable goods index (December 2024 = 100)","Durable goods trend (log-linear)","Durable goods trend, lower bound","Durable goods trend, upper bound","Forecast indicator"
 2023-01-01,100.693736917178,100.92968518895,100.601424908979,101.259016575136,103.849235112349,104.193354593693,103.694733127383,104.694373707011,FALSE
 2023-02-01,100.881759072301,100.888331097064,100.574713990694,101.20292613999,103.881661770877,104.003980856891,103.528256830621,104.48189088876,FALSE
@@ -39,3 +36,7 @@
 2025-11-01,101.52548024378,99.5581138849812,99.4030211154588,99.713448636758,101.495441193301,98.0533138374666,97.828469049666,98.2786753989538,TRUE
 2025-12-01,101.966359779931,99.5186373831222,99.3497345008397,99.6878274144724,102.051463014535,97.8808435433599,97.6363194345118,98.1259800476787,TRUE
 2026-01-01,102.271085341682,99.4778614422581,99.2947016748431,99.6613590675834,102.472055850151,97.7029429356343,97.4381613140457,97.968444083394,TRUE
+
+# Figure A1. PCE Core Goods & Durables Prices (Log-Linear Trend)
+# Index (Dec 2024 = 100), log-linear trend (2023-2024 estimation) with 90% CIs
+# Source: Bureau of Economic Analysis via Haver Analytics and The Budget Lab analysis 
