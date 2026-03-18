@@ -44,6 +44,13 @@ INPUT_DIR  <- here("input")
 OUTPUT_DIR <- here("output")
 LOG_DIR    <- here("logs")
 
+# Canonical list of required input files (used by run_all.R for pre-flight checks)
+import_price_index_required_inputs <- function() {
+  c("BEA - Import Matrix, Before Redefinitions - Summary - 2024.xlsx",
+    "BEA - The Use of Commodities by Industry - Summary - 2024.xlsx",
+    "PCEBridge_Summary.xlsx")
+}
+
 dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 dir.create(LOG_DIR, showWarnings = FALSE, recursive = TRUE)
 

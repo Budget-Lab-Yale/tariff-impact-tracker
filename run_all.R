@@ -79,15 +79,18 @@ REQUIRED_PACKAGES <- c(
   "depmixS4"     # Hidden Markov models (fallback for MSwM)
 )
 
-# Required input files for employment index
+# Required input files for each standalone script.
+# Canonical source: employment_index_required_inputs() in R/employment_index.R
+#                   import_price_index_required_inputs() in R/import_price_index.R
+# Keep these in sync -- each script validates its own inputs at runtime.
 EMP_INDEX_INPUTS <- c(
   "USITC - Customs and Duties - January 2026.xlsx",
   "BEA - Import Matrix, Before Redefinitions - Summary - 2024.xlsx",
   "BEA - The Use of Commodities by Industry - Summary - 2024.xlsx",
-  "x_codes.csv"
+  "x_codes.csv",
+  "naics_to_bea_crosswalk.csv"
 )
 
-# Required input files for import price index
 IPI_INPUTS <- c(
   "BEA - Import Matrix, Before Redefinitions - Summary - 2024.xlsx",
   "BEA - The Use of Commodities by Industry - Summary - 2024.xlsx",
@@ -169,46 +172,73 @@ dir.create(here("website", "vintages"), showWarnings = FALSE, recursive = TRUE)
 
 log_msg("INFO", paste("Working directory:", here()))
 
-# Check Haver availability
+# Check Haver availability (requireNamespace, not library -- Haver is optional)
 haver_available <- tryCatch({
-  library(Haver)
-  haver.direct("on")
+  if (!requireNamespace("Haver", quietly = TRUE)) stop("not installed")
+  Haver::haver.direct("on")
   TRUE
-}, error = function(e) {
-  FALSE
-})
+}, error = function(e) FALSE)
 
 if (haver_available) {
-  log_msg("INFO", "Haver Analytics connection available")
+  log_msg("INFO", "Haver Analytics connection: AVAILABLE")
 } else {
-  log_msg("WARN", "Haver Analytics not available - will use existing CSV files if present")
+  log_msg("WARN", "Haver Analytics connection: UNAVAILABLE -- will use cached CSV files")
 }
 
-# Check for existing output files
-output_files <- list.files(here("output"), pattern = "\\.csv$")
-if (length(output_files) > 0) {
-  log_msg("INFO", paste("Found", length(output_files), "existing output files"))
-} else {
-  if (!haver_available) {
-    log_msg("WARN", "No existing output files and Haver not available - some analyses may fail")
+# --- Validate cached output CSVs when Haver is unavailable ---
+# These are the CSVs produced by tariff_impacts_work.R that the report needs
+REQUIRED_OUTPUT_CSVS <- c(
+  "tariff_revenue.csv", "import_shares.csv", "pce_prices.csv",
+  "import_prices.csv", "employment.csv", "industrial_production.csv",
+  "trade_flows.csv", "fed_policy.csv", "exchange_rates.csv",
+  "twi_long.csv", "cpi_data.csv"
+)
+
+output_csvs <- list.files(here("output"), pattern = "\\.csv$")
+if (length(output_csvs) > 0) {
+  log_msg("INFO", paste("Found", length(output_csvs), "existing output CSV files"))
+}
+
+if (!haver_available) {
+  missing_csvs <- REQUIRED_OUTPUT_CSVS[!REQUIRED_OUTPUT_CSVS %in% output_csvs]
+  if (length(missing_csvs) > 0) {
+    log_msg("ERROR", paste("Offline mode but missing required cached CSVs:"))
+    for (f in missing_csvs) log_msg("ERROR", paste("  Missing:", f))
+    stop("Pipeline cannot proceed: Haver unavailable and cached outputs incomplete. ",
+         "Missing: ", paste(missing_csvs, collapse = ", "))
   }
+  # Check that cached CSVs are non-empty
+  empty_csvs <- REQUIRED_OUTPUT_CSVS[sapply(REQUIRED_OUTPUT_CSVS, function(f) {
+    fpath <- here("output", f)
+    file.exists(fpath) && file.size(fpath) < 10  # less than 10 bytes = effectively empty
+  })]
+  if (length(empty_csvs) > 0) {
+    log_msg("ERROR", paste("Cached CSVs exist but are empty:"))
+    for (f in empty_csvs) log_msg("ERROR", paste("  Empty:", f))
+    stop("Pipeline cannot proceed: cached CSVs are empty. ",
+         "Empty: ", paste(empty_csvs, collapse = ", "))
+  }
+  log_msg("INFO", "All required cached CSVs present and non-empty -- offline mode OK")
 }
 
-# Check for input files (for employment index)
-input_available <- sapply(EMP_INDEX_INPUTS, function(f) file.exists(here("input", f)))
-if (all(input_available)) {
-  log_msg("INFO", "All input files for employment index available")
-} else {
-  missing_inputs <- EMP_INDEX_INPUTS[!input_available]
-  log_msg("WARN", paste("Missing input files:", paste(missing_inputs, collapse = ", ")))
-  log_msg("WARN", "Tariff employment index will be skipped")
+# --- Check input files for employment index ---
+check_inputs <- function(input_files, label = "step") {
+  missing <- input_files[!sapply(input_files, function(f) file.exists(here("input", f)))]
+  if (length(missing) > 0) {
+    log_msg("SKIP", paste0(label, ": missing input files:"))
+    for (f in missing) log_msg("SKIP", paste("  Missing:", f))
+  }
+  length(missing) == 0
 }
+
+emp_idx_ready <- check_inputs(EMP_INDEX_INPUTS, label = "Employment index")
+ipi_ready <- check_inputs(IPI_INPUTS, label = "Import price index")
 
 # ==============================================================================
 # STEP 3: RUN DATA PROCESSING
 # ==============================================================================
 
-log_msg("INFO", "Step 3: Running data processing...")
+log_msg("INFO", "Step 3: Running data processing (tariff_impacts_work.R)...")
 
 # Start timer
 start_time <- Sys.time()
@@ -216,10 +246,10 @@ start_time <- Sys.time()
 # Run the main work script
 tryCatch({
   source(here("R", "tariff_impacts_work.R"))
-  log_msg("INFO", "Data processing completed successfully")
+  log_msg("OK", "Step 3 completed: data processing finished")
 }, error = function(e) {
-  log_msg("ERROR", paste("Data processing failed:", e$message))
-  stop("Pipeline failed at data processing step")
+  log_msg("FAIL", paste("Step 3 failed: data processing --", e$message))
+  stop("Pipeline cannot proceed: data processing step failed")
 })
 
 # ==============================================================================
@@ -228,29 +258,16 @@ tryCatch({
 
 log_msg("INFO", "Step 4: Running employment index calculation...")
 
-emp_idx_crosswalk <- here("input", "naics_to_bea_crosswalk.csv")
-
-emp_idx_ready <- all(sapply(EMP_INDEX_INPUTS, function(f) file.exists(here("input", f)))) &&
-                 file.exists(emp_idx_crosswalk)
-
 if (emp_idx_ready) {
   tryCatch({
     source(here("R", "employment_index.R"))
-    log_msg("INFO", "Employment index calculation completed successfully")
+    log_msg("OK", "Step 4 completed: employment index calculated")
   }, error = function(e) {
-    log_msg("WARN", paste("Employment index calculation failed:", e$message))
-    log_msg("WARN", "Continuing without employment index - other outputs are still available")
+    log_msg("FAIL", paste("Step 4 failed: employment index --", e$message))
+    log_msg("INFO", "Pipeline continues without employment index")
   })
 } else {
-  log_msg("WARN", "Missing input files for employment index - skipping")
-  if (!file.exists(emp_idx_crosswalk)) {
-    log_msg("WARN", "  Missing: input/naics_to_bea_crosswalk.csv")
-  }
-  for (f in EMP_INDEX_INPUTS) {
-    if (!file.exists(here("input", f))) {
-      log_msg("WARN", paste("  Missing:", f))
-    }
-  }
+  log_msg("SKIP", "Step 4 skipped: employment index (missing input files, see above)")
 }
 
 # ==============================================================================
@@ -259,23 +276,16 @@ if (emp_idx_ready) {
 
 log_msg("INFO", "Step 5: Running import price index calculation...")
 
-ipi_ready <- all(sapply(IPI_INPUTS, function(f) file.exists(here("input", f))))
-
 if (ipi_ready) {
   tryCatch({
     source(here("R", "import_price_index.R"))
-    log_msg("INFO", "Import price index calculation completed successfully")
+    log_msg("OK", "Step 5 completed: import price index calculated")
   }, error = function(e) {
-    log_msg("WARN", paste("Import price index calculation failed:", e$message))
-    log_msg("WARN", "Continuing without import price index - other outputs are still available")
+    log_msg("FAIL", paste("Step 5 failed: import price index --", e$message))
+    log_msg("INFO", "Pipeline continues without import price index")
   })
 } else {
-  log_msg("WARN", "Missing input files for import price index - skipping")
-  for (f in IPI_INPUTS) {
-    if (!file.exists(here("input", f))) {
-      log_msg("WARN", paste("  Missing:", f))
-    }
-  }
+  log_msg("SKIP", "Step 5 skipped: import price index (missing input files, see above)")
 }
 
 # ==============================================================================
@@ -290,7 +300,7 @@ Sys.setenv(PUBLICATION_RUN = as.character(PUBLICATION_RUN))
 # Check for report file
 report_file <- here("R", "tariff_impacts_report.Rmd")
 if (!file.exists(report_file)) {
-  log_msg("WARN", "Report template not found - skipping report generation")
+  log_msg("SKIP", "Step 6: report template not found -- skipping report generation")
 } else {
   # 6a: HTML report
   tryCatch({
@@ -300,10 +310,10 @@ if (!file.exists(report_file)) {
       output_dir = here("output"),
       quiet = TRUE
     )
-    log_msg("INFO", paste("HTML report generated:", html_file))
+    log_msg("OK", paste("HTML report generated:", basename(html_file)))
   }, error = function(e) {
-    log_msg("ERROR", paste("HTML report generation failed:", e$message))
-    log_msg("WARN", "Continuing without HTML report - data files are still available")
+    log_msg("FAIL", paste("HTML report generation failed:", e$message))
+    log_msg("INFO", "Pipeline continues without HTML report")
   })
 
   # 6b: Word report
@@ -314,17 +324,17 @@ if (!file.exists(report_file)) {
       output_dir = here("output"),
       quiet = TRUE
     )
-    log_msg("INFO", paste("Word report generated:", word_file))
+    log_msg("OK", paste("Word report generated:", basename(word_file)))
   }, error = function(e) {
-    log_msg("WARN", paste("Word report generation failed:", e$message))
-    log_msg("WARN", "HTML report is still available")
+    log_msg("FAIL", paste("Word report generation failed:", e$message))
+    log_msg("INFO", "Pipeline continues without Word report")
   })
 }
 
 # Methodology document
 methodology_file <- here("R", "methodology.Rmd")
 if (!file.exists(methodology_file)) {
-  log_msg("WARN", "Methodology template not found - skipping")
+  log_msg("SKIP", "Methodology template not found -- skipping")
 } else {
   # 6c: Methodology HTML
   tryCatch({
@@ -334,9 +344,9 @@ if (!file.exists(methodology_file)) {
       output_dir = here("output"),
       quiet = TRUE
     )
-    log_msg("INFO", paste("Methodology HTML generated:", meth_html))
+    log_msg("OK", paste("Methodology HTML generated:", basename(meth_html)))
   }, error = function(e) {
-    log_msg("WARN", paste("Methodology HTML generation failed:", e$message))
+    log_msg("FAIL", paste("Methodology HTML failed:", e$message))
   })
 
   # 6d: Methodology Word
@@ -347,9 +357,9 @@ if (!file.exists(methodology_file)) {
       output_dir = here("output"),
       quiet = TRUE
     )
-    log_msg("INFO", paste("Methodology Word generated:", meth_word))
+    log_msg("OK", paste("Methodology Word generated:", basename(meth_word)))
   }, error = function(e) {
-    log_msg("WARN", paste("Methodology Word generation failed:", e$message))
+    log_msg("FAIL", paste("Methodology Word failed:", e$message))
   })
 }
 
@@ -394,7 +404,7 @@ cat("\n")
 # ==============================================================================
 
 if (PUBLICATION_RUN) {
-  log_msg("INFO", "Step 8: Publication run -- copying final outputs...")
+  log_msg("INFO", "Step 8: Publication mode -- copying final outputs...")
 
   pub_dir <- here("output", "publication")
   dir.create(pub_dir, showWarnings = FALSE, recursive = TRUE)
@@ -438,14 +448,14 @@ if (PUBLICATION_RUN) {
       log_msg("INFO", paste("  ", f))
     }
   } else {
-    log_msg("WARN", "No output files found to copy for publication")
+    log_msg("SKIP", "Step 8: no output files found to copy for publication")
   }
 } else {
-  log_msg("INFO", "Not a publication run -- outputs in output/ only (gitignored)")
+  log_msg("SKIP", "Step 8 skipped: not a publication run (set PUBLICATION_RUN=TRUE to enable)")
 }
 
 # Log completion to file
-log_msg("INFO", "Pipeline completed successfully")
+log_msg("OK", "Pipeline completed successfully")
 log_msg("INFO", paste("Log file saved to:", LOG_FILE))
 
 cat("Log file saved to:\n")

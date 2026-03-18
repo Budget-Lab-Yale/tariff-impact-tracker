@@ -52,6 +52,15 @@ INPUT_DIR  <- here("input")
 OUTPUT_DIR <- here("output")
 LOG_DIR    <- here("logs")
 
+# Canonical list of required input files (used by run_all.R for pre-flight checks)
+employment_index_required_inputs <- function() {
+  c("USITC - Customs and Duties - January 2026.xlsx",
+    "BEA - Import Matrix, Before Redefinitions - Summary - 2024.xlsx",
+    "BEA - The Use of Commodities by Industry - Summary - 2024.xlsx",
+    "x_codes.csv",
+    "naics_to_bea_crosswalk.csv")
+}
+
 dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 dir.create(LOG_DIR, showWarnings = FALSE, recursive = TRUE)
 
@@ -870,7 +879,12 @@ if (haver_available && length(all_y_codes) > 0) {
   # Try to load from existing file
   y_j_file <- file.path(OUTPUT_DIR, "y_j_output.csv")
   if (file.exists(y_j_file)) {
-    log_msg("INFO", "Loading from existing y_j_output.csv")
+    # Staleness check: warn if cache is older than 90 days
+    cache_age_days <- as.numeric(difftime(Sys.time(), file.mtime(y_j_file), units = "days"))
+    if (cache_age_days > 90) {
+      log_msg("WARN", sprintf("y_j_output.csv is %.0f days old -- consider refreshing with Haver", cache_age_days))
+    }
+    log_msg("INFO", sprintf("Loading from existing y_j_output.csv (%.0f days old)", cache_age_days))
     y_j_existing <- read_csv(y_j_file, show_col_types = FALSE)
 
     # Get most recent year and reshape
