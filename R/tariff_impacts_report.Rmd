@@ -3013,12 +3013,12 @@ if (ipi_available && exists("ipi_passthrough_jun") && exists("ipi_passthrough"))
   # Build combined CSV manually with group headers
   t1_path <- file.path(CSV_DIR, "T1_ipi_passthrough.csv")
   tryCatch({
-    header_row <- c("", "Inputs", "", "", "Price Changes", "", "", "Implied Passthrough", "", "")
+    header_row <- ",Inputs,~~~,~~~,Price Changes,~~~,~~~,Implied Passthrough,~~~,~~~"
     col_names <- c("Category", "Import share", "Tariff increase", "Expected effect",
                    "2025 Change", "vs LP Trend", "vs Log-Linear",
                    "2025 Change", "vs LP Trend", "vs Log-Linear")
     lines <- character()
-    lines <- c(lines, paste(shQuote(header_row, type = "cmd"), collapse = ","))
+    lines <- c(lines, header_row)
     lines <- c(lines, paste(shQuote(col_names, type = "cmd"), collapse = ","))
     # June 2025 subhead + data
     lines <- c(lines, paste0('"June 2025"', paste(rep(",", 9), collapse = "")))
@@ -3033,14 +3033,6 @@ if (ipi_available && exists("ipi_passthrough_jun") && exists("ipi_passthrough"))
       lines <- c(lines, paste(shQuote(as.character(tab1b_data[i, ]), type = "cmd"), collapse = ","))
     }
     writeLines(lines, t1_path)
-    # Append metadata
-    strip_commas <- function(x) gsub(",", ";", x)
-    meta_lines <- c(
-      "",
-      paste0("# ", strip_commas(paste0(fig_meta("T1a", "label"), ". ", fig_meta("T1a", "title")))),
-      paste0("# Source: ", strip_commas(fig_meta("T1a", "source")))
-    )
-    cat(paste0(meta_lines, collapse = "\n"), "\n", file = t1_path, append = TRUE)
     file.copy(t1_path, file.path(VINTAGE_CSV, "T1_ipi_passthrough.csv"), overwrite = TRUE)
   }, error = function(e) {
     message(paste("Could not write CSV T1_ipi_passthrough.csv:", e$message))
@@ -3140,12 +3132,12 @@ write_website_csv(fig15_csv, "F15_cumulative_import_gap.csv", "F15")
 {
   ta_path <- file.path(CSV_DIR, "TA_pce_passthrough.csv")
   tryCatch({
-    header_row <- c("", "Inputs", "", "", "Price Changes", "", "", "Implied Passthrough", "", "")
+    header_row <- ",Inputs,~~~,~~~,Price Changes,~~~,~~~,Implied Passthrough,~~~,~~~"
     col_names <- c("Category", "Import share", "Tariff increase", "Expected effect",
                    "2025 Change", "vs LP Trend", "vs Log-Linear",
                    "2025 Change", "vs LP Trend", "vs Log-Linear")
     lines <- character()
-    lines <- c(lines, paste(shQuote(header_row, type = "cmd"), collapse = ","))
+    lines <- c(lines, header_row)
     lines <- c(lines, paste(shQuote(col_names, type = "cmd"), collapse = ","))
     # June 2025 subhead + data
     lines <- c(lines, paste0('"June 2025"', paste(rep(",", 9), collapse = "")))
@@ -3160,14 +3152,6 @@ write_website_csv(fig15_csv, "F15_cumulative_import_gap.csv", "F15")
       lines <- c(lines, paste(shQuote(as.character(tblA2_data[i, ]), type = "cmd"), collapse = ","))
     }
     writeLines(lines, ta_path)
-    # Append metadata
-    strip_commas <- function(x) gsub(",", ";", x)
-    meta_lines <- c(
-      "",
-      paste0("# ", strip_commas(paste0(fig_meta("TA1", "label"), ". ", fig_meta("TA1", "title")))),
-      paste0("# Source: ", strip_commas(fig_meta("TA1", "source")))
-    )
-    cat(paste0(meta_lines, collapse = "\n"), "\n", file = ta_path, append = TRUE)
     file.copy(ta_path, file.path(VINTAGE_CSV, "TA_pce_passthrough.csv"), overwrite = TRUE)
   }, error = function(e) {
     message(paste("Could not write CSV TA_pce_passthrough.csv:", e$message))
@@ -3369,7 +3353,18 @@ html_parts$sources <- paste0(
   '</section>\n\n'
 )
 
-# --- Appendix omitted from website HTML (figures/tables still exported as CSVs) ---
+# --- Appendix ---
+html_parts$appendix <- paste0(
+  '<section id="appendix">\n',
+  '<h2>Appendix</h2>\n',
+  if (daily_etr_available) fig_placeholder("FA1", "FA1_daily_etr_by_authority.csv") else "",
+  if (ipi_available) fig_placeholder("TA1", "TA_pce_passthrough.csv") else "",
+  if (ipi_available) fig_placeholder("TA2", "TA_pce_passthrough.csv") else "",
+  '<p><strong>Note:</strong> Tables A1&ndash;A2 use overall PCE price indices (domestic + imported) rather than the import-weighted index used in the main text Tables 1a&ndash;1b.</p>\n',
+  if (exists("ll_combined")) fig_placeholder("FA2", "FA2_pce_prices_loglinear_trend.csv") else "",
+  if (exists("ll_deviations")) fig_placeholder("FA3", "FA3_pce_deviation_loglinear.csv") else "",
+  '</section>\n\n'
+)
 
 html_parts$footer <- '</article>\n'
 
