@@ -2483,11 +2483,16 @@ add_tbl_sheet <- function(wb, sheet_name, data, title, subtitle, source,
 # Format monthly dates for CSV: "Dec 2024", "Jan 2025", "Feb", "Mar", ..., "Jan 2026"
 # Show year for first entry and every January; abbreviation only otherwise
 format_csv_date <- function(dates) {
+  # Bar/column charts: text labels as displayed (Datawrapper treats as text)
   m <- format(dates, "%b")
   y <- format(dates, "%Y")
-  # Show year for first entry and every January
   show_year <- seq_along(dates) == 1 | month(dates) == 1
   ifelse(show_year, paste(m, y), m)
+}
+
+format_csv_date_line <- function(dates) {
+  # Line charts: standard date format (Datawrapper parses as dates)
+  format(dates, "%Y-%m")
 }
 
 # Figure 1: Daily Effective Tariff Rate
@@ -2986,7 +2991,7 @@ write_website_csv(fig2_csv, "F2_effective_tariff_rate.csv", "F2")
 # F3: Customs Duty Revenue — CSV: formatted dates, plotted columns only
 fig3_csv <- fig3_data_rev %>%
   dplyr::select(Date, `Customs duties (real)`, `2022-2024 average (real)`) %>%
-  mutate(Date = format_csv_date(Date))
+  mutate(Date = format_csv_date_line(Date))
 write_website_csv(fig3_csv, "F3_customs_duty_revenue.csv", "F3")
 
 # F4: PCE Prices with LP Trend — CSV: no CI, no forecast indicator
@@ -2996,7 +3001,7 @@ fig4_csv <- pce_combined %>%
          "Core goods trend" = core_trend,
          "Durable goods index" = durables_idx,
          "Durable goods trend" = dur_trend) %>%
-  mutate(Date = format_csv_date(Date))
+  mutate(Date = format_csv_date_line(Date))
 write_website_csv(fig4_csv, "F4_pce_prices_lp_trend.csv", "F4")
 
 # F5: PCE Deviation from Trend
@@ -3047,7 +3052,7 @@ if (ipi_available && exists("ipi_combined")) {
            "Imported core goods trend" = core_trend,
            "Imported durables index" = durables_idx,
            "Imported durables trend" = dur_trend) %>%
-    mutate(Date = format_csv_date(Date))
+    mutate(Date = format_csv_date_line(Date))
   write_website_csv(fig6_csv, "F6_imported_pce_prices.csv", "F6")
 
   fig7_csv <- ipi_for_fig6 %>%
@@ -3064,7 +3069,7 @@ fig8_csv <- import_trend %>%
   dplyr::select("Date" = date,
                 "Import price index" = import_idx,
                 "Trend" = trend) %>%
-  mutate(Date = format_csv_date(Date))
+  mutate(Date = format_csv_date_line(Date))
 write_website_csv(fig8_csv, "F8_import_prices.csv", "F8")
 
 # F9: Employment Index — CSV: no deviation column
@@ -3073,7 +3078,7 @@ if (tariff_emp_available && exists("trend_recent")) {
     dplyr::select("Date" = date,
                   "Employment index" = actual,
                   "Trend" = trend) %>%
-    mutate(Date = format_csv_date(Date))
+    mutate(Date = format_csv_date_line(Date))
   write_website_csv(fig9_csv, "F9_employment_index.csv", "F9")
 }
 
@@ -3083,7 +3088,7 @@ if (tariff_emp_mfg_available && exists("trend_mfg_recent")) {
     dplyr::select("Date" = date,
                   "Manufacturing employment index" = actual,
                   "Trend" = trend) %>%
-    mutate(Date = format_csv_date(Date))
+    mutate(Date = format_csv_date_line(Date))
   write_website_csv(fig10_csv, "F10_manufacturing_employment_index.csv", "F10")
 }
 
@@ -3097,7 +3102,7 @@ fig11_csv <- ip_trend %>%
   dplyr::select("Date" = date,
                 "Industrial production index" = ip_idx,
                 "Trend" = trend) %>%
-  mutate(Date = format_csv_date(Date))
+  mutate(Date = format_csv_date_line(Date))
 write_website_csv(fig11_csv, "F11_industrial_production.csv", "F11")
 
 # F12: Exchange Rates (daily, keep as-is)
@@ -3111,7 +3116,7 @@ if (exists("fx_daily_indexed")) {
 # F13: Real Imports and Exports — CSV: no deviation columns
 fig13_csv <- fig13_trade_data %>%
   dplyr::select(Date, `Real imports`, `Imports trend`, `Real exports`, `Exports trend`) %>%
-  mutate(Date = format_csv_date(Date))
+  mutate(Date = format_csv_date_line(Date))
 write_website_csv(fig13_csv, "F13_real_imports_exports.csv", "F13")
 
 # F14: Trade Deviation from Trend — CSV: deviation percentages only
@@ -3125,7 +3130,7 @@ write_website_csv(fig14_csv, "F14_trade_deviation.csv", "F14")
 # F15: Cumulative Import Gap — CSV: no raw level columns
 fig15_csv <- fig15_data %>%
   dplyr::select(Date, `Monthly gap (billions USD)`, `Cumulative gap (billions USD)`) %>%
-  mutate(Date = format_csv_date(Date))
+  mutate(Date = format_csv_date_line(Date))
 write_website_csv(fig15_csv, "F15_cumulative_import_gap.csv", "F15")
 
 # TA: Combined All-PCE Passthrough (June 2025 + latest month)
@@ -3173,7 +3178,7 @@ if (exists("ll_combined")) {
            "Core goods trend (log-linear)" = core_trend,
            "Durable goods index" = durables_idx,
            "Durable goods trend (log-linear)" = dur_trend) %>%
-    mutate(Date = format_csv_date(Date))
+    mutate(Date = format_csv_date_line(Date))
   write_website_csv(figA2_csv, "FA2_pce_prices_loglinear_trend.csv", "FA2")
 }
 
