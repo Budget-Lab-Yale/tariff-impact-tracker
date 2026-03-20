@@ -289,20 +289,19 @@ if (ipi_ready) {
 }
 
 # ==============================================================================
-# STEP 6: GENERATE REPORTS (HTML + Word)
+# STEP 6: GENERATE REPORTS, EXPORTS, AND DRUPAL HTML
 # ==============================================================================
 
-log_msg("INFO", "Step 6: Generating reports...")
+log_msg("INFO", "Step 6: Generating reports and exports...")
 
-# Pass publication flag to Rmd environment so website export can read it
+# Pass publication flag to Rmd/script environment
 Sys.setenv(PUBLICATION_RUN = as.character(PUBLICATION_RUN))
 
-# Check for report file
+# 6a: HTML report (review document with ggplot figures)
 report_file <- here("R", "tariff_impacts_report.Rmd")
 if (!file.exists(report_file)) {
-  log_msg("SKIP", "Step 6: report template not found -- skipping report generation")
+  log_msg("SKIP", "Step 6a: report template not found -- skipping")
 } else {
-  # 6a: HTML report
   tryCatch({
     html_file <- rmarkdown::render(
       input = report_file,
@@ -310,10 +309,9 @@ if (!file.exists(report_file)) {
       output_dir = here("output"),
       quiet = TRUE
     )
-    log_msg("OK", paste("HTML report generated:", basename(html_file)))
+    log_msg("OK", paste("6a: HTML report generated:", basename(html_file)))
   }, error = function(e) {
-    log_msg("FAIL", paste("HTML report generation failed:", e$message))
-    log_msg("INFO", "Pipeline continues without HTML report")
+    log_msg("FAIL", paste("6a: HTML report failed:", e$message))
   })
 
   # 6b: Word report
@@ -324,19 +322,56 @@ if (!file.exists(report_file)) {
       output_dir = here("output"),
       quiet = TRUE
     )
-    log_msg("OK", paste("Word report generated:", basename(word_file)))
+    log_msg("OK", paste("6b: Word report generated:", basename(word_file)))
   }, error = function(e) {
-    log_msg("FAIL", paste("Word report generation failed:", e$message))
-    log_msg("INFO", "Pipeline continues without Word report")
+    log_msg("FAIL", paste("6b: Word report failed:", e$message))
   })
 }
 
-# Methodology document
+# 6c: Export website data (Excel workbook + CSVs)
+export_script <- here("R", "export_website_data.R")
+if (!file.exists(export_script)) {
+  log_msg("SKIP", "Step 6c: export_website_data.R not found -- skipping")
+} else {
+  tryCatch({
+    source(export_script)
+    log_msg("OK", "6c: Website data exported (Excel + CSVs)")
+  }, error = function(e) {
+    log_msg("FAIL", paste("6c: Website data export failed:", e$message))
+  })
+}
+
+# 6d: Drupal HTML fragment (publication runs only)
+drupal_file <- here("R", "tariff_impacts_drupal.Rmd")
+if (PUBLICATION_RUN && file.exists(drupal_file)) {
+  tryCatch({
+    drupal_html <- rmarkdown::render(
+      input = drupal_file,
+      output_format = "html_fragment",
+      output_dir = here("website", "html"),
+      output_file = "tariff_impacts_report_drupal.html",
+      quiet = TRUE
+    )
+    log_msg("OK", paste("6d: Drupal HTML generated:", basename(drupal_html)))
+    # Copy to vintage
+    vintage_dir <- file.path(here("website", "vintages"), format(Sys.Date(), "%Y%m%d"), "html")
+    dir.create(vintage_dir, showWarnings = FALSE, recursive = TRUE)
+    file.copy(drupal_html, file.path(vintage_dir, "tariff_impacts_report_drupal.html"),
+              overwrite = TRUE)
+  }, error = function(e) {
+    log_msg("FAIL", paste("6d: Drupal HTML failed:", e$message))
+  })
+} else if (!PUBLICATION_RUN) {
+  log_msg("SKIP", "Step 6d: Drupal HTML skipped (not a publication run)")
+} else {
+  log_msg("SKIP", "Step 6d: tariff_impacts_drupal.Rmd not found -- skipping")
+}
+
+# 6e-6f: Methodology document
 methodology_file <- here("R", "methodology.Rmd")
 if (!file.exists(methodology_file)) {
   log_msg("SKIP", "Methodology template not found -- skipping")
 } else {
-  # 6c: Methodology HTML
   tryCatch({
     meth_html <- rmarkdown::render(
       input = methodology_file,
@@ -344,12 +379,11 @@ if (!file.exists(methodology_file)) {
       output_dir = here("output"),
       quiet = TRUE
     )
-    log_msg("OK", paste("Methodology HTML generated:", basename(meth_html)))
+    log_msg("OK", paste("6e: Methodology HTML generated:", basename(meth_html)))
   }, error = function(e) {
-    log_msg("FAIL", paste("Methodology HTML failed:", e$message))
+    log_msg("FAIL", paste("6e: Methodology HTML failed:", e$message))
   })
 
-  # 6d: Methodology Word
   tryCatch({
     meth_word <- rmarkdown::render(
       input = methodology_file,
@@ -357,9 +391,9 @@ if (!file.exists(methodology_file)) {
       output_dir = here("output"),
       quiet = TRUE
     )
-    log_msg("OK", paste("Methodology Word generated:", basename(meth_word)))
+    log_msg("OK", paste("6f: Methodology Word generated:", basename(meth_word)))
   }, error = function(e) {
-    log_msg("FAIL", paste("Methodology Word failed:", e$message))
+    log_msg("FAIL", paste("6f: Methodology Word failed:", e$message))
   })
 }
 
