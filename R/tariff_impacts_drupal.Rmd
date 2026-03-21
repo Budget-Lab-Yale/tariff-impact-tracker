@@ -20,14 +20,15 @@ source(here::here("R", "report_setup.R"))
 dw_config <- readr::read_csv(here::here("website", "datawrapper_embeds.csv"), show_col_types = FALSE)
 
 # Helper: generate Datawrapper embed div from fig_id
-dw_embed <- function(fig_id) {
+dw_embed <- function(fig_id, wide = FALSE) {
   row <- dw_config[dw_config$fig_id == fig_id, ]
   if (nrow(row) == 0) return("")
   code <- row$embed_code[1]
   height <- row$min_height[1]
   alt <- row$alt_text[1]
+  outer_class <- if (wide) ' class="dw-table-wide"' else ""
   paste0(
-    '<div style="margin-top:35.53778px;margin-bottom:35.53778px;">',
+    '<div', outer_class, ' style="margin-top:35.53778px;margin-bottom:35.53778px;">',
     '<div style="min-height:', height, 'px" id="datawrapper-vis-', code, '">',
     '<script type="text/javascript" defer src="https://datawrapper.dwcdn.net/', code, '/embed.js" ',
     'charset="utf-8" data-target="#datawrapper-vis-', code, '"></script>',
@@ -43,6 +44,9 @@ cat('<style>
   .tariff-impacts-report section.layout,
   .tariff-impacts-report #key-takeaways {
     padding-inline: calc(100% / 6);
+  }
+  .tariff-impacts-report .dw-table-wide {
+    margin-inline: -12.5%;
   }
 }
 .paragraph--key-takeaways .paragraph__title {
@@ -100,7 +104,7 @@ cat('<article class="tariff-impacts-report ck-content">
 <ol class="paragraph__key-takeaways-list">
 <li class="paragraph__key-takeaway-item"><div><p><strong>Updated economic indicators:</strong> This report reviews economic indicators that are related to the effect of Tariffs on the US Economy as of ', format_date_long(), '. For the most part, given data lags, the findings reflect the conditions prior to the SCOTUS decision repealing IEEPA Tariffs on February 20th, 2026.</p></div></li>
 <li class="paragraph__key-takeaway-item"><div><p><strong>Tariff revenue:</strong> The 2025 tariffs have raised an estimated $', safe_fmt(total_excess_rev), ' billion in inflation-adjusted customs revenue above the 2022&ndash;2024 average as of ', latest_month_name, ', with the effective tariff rate reaching ', safe_fmt(latest_tariff_rate), '% in ', latest_tariff_month, '.</p></div></li>
-<li class="paragraph__key-takeaway-item"><div><p><strong>Pass-through to consumer prices:</strong> Imported PCE core goods and durable goods prices have risen ', safe_fmt(tk_ipi_ytd_core), '% and ', safe_fmt(tk_ipi_ytd_dur), '% respectively during 2025 through ', data_month_name, ', both well above prior-year comparisons. Implied passthrough of tariffs to imported consumer goods prices ranges from roughly ', safe_fmt(tk_ipi_core_low, "%.0f"), '&ndash;', safe_fmt(tk_ipi_core_high, "%.0f"), '% for core goods and ', safe_fmt(tk_ipi_dur_low, "%.0f"), '&ndash;', safe_fmt(tk_ipi_dur_high, "%.0f"), '% for durables, depending on methodology (see Tables 1a&ndash;1b).</p></div></li>
+<li class="paragraph__key-takeaway-item"><div><p><strong>Pass-through to consumer prices:</strong> Imported PCE core goods and durable goods prices have risen ', safe_fmt(tk_ipi_ytd_core), '% and ', safe_fmt(tk_ipi_ytd_dur), '% respectively during 2025 through ', data_month_name, ', both well above prior-year comparisons. Implied passthrough of tariffs to imported consumer goods prices ranges from roughly ', safe_fmt(tk_ipi_core_low, "%.0f"), '&ndash;', safe_fmt(tk_ipi_core_high, "%.0f"), '% for core goods and ', safe_fmt(tk_ipi_dur_low, "%.0f"), '&ndash;', safe_fmt(tk_ipi_dur_high, "%.0f"), '% for durables, depending on methodology (see Table 1).</p></div></li>
 <li class="paragraph__key-takeaway-item"><div><p><strong>Employment:</strong> There is no definitive indication of a significant aggregate labor market effect so far, though tariff-exposed industries show some signs of weakness relative to pre-2025 trend.</p></div></li>
 </ol>
 </section>
@@ -162,11 +166,10 @@ cat('<section id="prices-consumer-passthrough" class="layout layout--margin-bott
 <p>In its modeling, TBL assumes that passthrough of tariffs to consumer prices will ultimately reach 100%. This is partially an assumption of convenience, but it is also rooted in studies of the 2018 tariffs, such as <a href="https://www.aeaweb.org/articles?id=10.1257/aer.20190611">Flaaen, Hortacsu &amp; Tintelnot (2020)</a> and <a href="https://www.usitc.gov/publications/332/pub5405.pdf">USITC (2023)</a>. However, both of these studies primarily focus on much narrower tariff increases, rather than the broader and more aggressive increases over the last year. The 2025 tariffs also come after a period of inflation, which may have changed how price-sensitive consumers are. In this context, comparing the rise in overall goods prices against what we would mechanically expect given the rise in tariffs, we can estimate an implied &ldquo;spot&rdquo; passthrough of actual tariffs to consumer prices as of ', data_month, '.</p>
 <p>In <a href="https://budgetlab.yale.edu/research/state-us-tariffs-november-17-2025">November 2025</a> (the month of the latest detailed Census trade data), the statutory fully-phased-in average tariff policy rate was 16.8%, but as mentioned earlier, there are several reasons why it takes time for tariff policy to fully flow through into realized revenues. We therefore use as our basis the actual average effective tariff rate, which was ', sprintf("%.1f%%", nov_2025_rate), ' that month. But this rate, calculated based on all revenues and imports, includes products and content that will not ultimately be purchased by consumers, such as business investment and exports. TBL therefore calculated average tariff rates on imported consumer goods. For imported core PCE goods, the average import-weighted effective tariff rate was ', sprintf("%.1f%%", tau_core_recent), ' in the most recent month, up from a 2022&ndash;2024 average of roughly ', sprintf("%.1f%%", tau_baseline_pct), ' (the 2025 annual average was ', sprintf("%.1f%%", tau_core_2025), '). For just imported PCE durables, the most-recent-month rate was ', sprintf("%.1f%%", tau_dur_recent), ', up from roughly ', sprintf("%.1f%%", tau_baseline_pct), ' (2025 annual average: ', sprintf("%.1f%%", tau_dur_2025), '). Given these shifts and the import share of PCE (total import content&mdash;including indirect imports through the supply chain&mdash;is ', sprintf("%.1f%%", IMPORT_SHARE_CORE_GOODS * 100), ' of core goods spending; see <a href="', meth_link, '">', meth_text, '</a>), we would expect full passthrough price effects from the actual tariff increases in 2025 so far to add ', sprintf("%.1f", ipi_expected_core), ' and ', sprintf("%.1f", ipi_expected_dur), ' percentage points through ', data_month, ' for core goods and durables prices, respectively.</p>
 <p>We estimate the rise in imported core goods and durable prices in three ways. The first, and our preferred approach, uses the trend estimates reported in Figure 6 as the counterfactual level of prices but-for tariffs. The second approach uses data from 2023-2024 to project forward pre-2025 prices. The third approach moves away from relying on estimating trends, and rather assumes that prices would have remained at their December 2024 level. It therefore uses the change in prices during 2025 through ', data_month_name, '. We think that this approach underestimates true price increases from the tariffs by ignoring counterfactuals, but provides an easy lower-bound estimate.</p>
-<p>The results of each are shown below, with one table for June 2025 and one for the most recent month of data, ', data_month, '. Tables 1a and 1b use these category-specific tariff rates rather than the economy-wide effective rate, since the tariff burden varies across consumer goods categories. Passthrough tables using overall PCE prices (as opposed to the imported goods) are available in the <a href="#appendix">Appendix below</a>.</p>
+<p>The results of each are shown in Table 1 below for June 2025 and the most recent month of data, ', data_month, '. Table 1 uses these category-specific tariff rates rather than the economy-wide effective rate, since the tariff burden varies across consumer goods categories. Passthrough tables using overall PCE prices (as opposed to the imported goods) are available in the <a href="#appendix">Appendix below</a>.</p>
 <p>Using our preferred LP trend method, the implied passthrough of tariffs to imported core goods prices through ', data_month, ' is ', fmt_pt(ipi_pt_core_lp), ', and the implied passthrough to imported durables prices is ', fmt_pt(ipi_pt_dur_lp), '. The larger durable passthrough rate is due both to a lower import share and a more aggressive pre-2025 downward trend in prices. The simpler log-linear trend yields very similar passthrough estimates of ', fmt_pt(ipi_pt_core_ll), ' for core goods and ', fmt_pt(ipi_pt_dur_ll), ' for durables. The most conservative method&mdash;raw price changes during 2025 through ', data_month_name, ' with no trend adjustment&mdash;gives ', fmt_pt(ipi_pt_core_simple), ' and ', fmt_pt(ipi_pt_dur_simple), ' for core goods and durables, respectively. All in all, the story is fairly consistent for imported core goods, with somewhere between ', fmt_pt(min(ipi_pt_core_simple, ipi_pt_core_lp, ipi_pt_core_ll, na.rm = TRUE)), ' and ', fmt_pt(max(ipi_pt_core_simple, ipi_pt_core_lp, ipi_pt_core_ll, na.rm = TRUE)), ' passthrough of tariffs. The story is more mixed for durable goods, due primarily to the uncertainty around the counterfactual level of prices but for tariffs. At the June 2025 mark, the LP passthrough estimates were ', fmt_pt(ipi_pt_core_lp_jun), ' for core goods and ', fmt_pt(ipi_pt_dur_lp_jun), ' for durables. The estimates of passthrough of imported core goods have remained relatively constant over time, but implied passthrough of durable goods has now reached over 100 percent, versus ', fmt_pt(ipi_pt_dur_simple_jun), '&ndash;', fmt_pt(ipi_pt_dur_ll_jun), ' in June 2025. These estimates of passthrough are larger than those found by other researchers, but not unreasonably so. For example, <a href="https://www.pricinglab.org/files/TrackingTariffs_Cavallo_Llamas_Vazquez.pdf">Cavallo, Llamas, and Vazquez (2026)</a> estimate that the passthrough to retail prices was 24 percent in October 2025.</p>
 
-', if (ipi_available) dw_embed("T1a") else "", '
-', if (ipi_available) dw_embed("T1b") else "", '
+', if (ipi_available) dw_embed("T1", wide = TRUE) else "", '
 </div>
 
 <div class="layout layout--margin-bottom-sm">
@@ -249,9 +252,8 @@ cat('<section id="data-sources" class="layout layout--margin-bottom-sm">
 cat('<section id="appendix" class="layout layout--margin-bottom-sm layout--one-column layout--color-scheme-light">
 <h2>Appendix</h2>
 ', if (daily_etr_available) dw_embed("FA1") else "", '
-', if (ipi_available) dw_embed("TA1") else "", '
-', if (ipi_available) dw_embed("TA2") else "", '
-<p><strong>Note:</strong> Tables A1&ndash;A2 use overall PCE price indices (domestic + imported) rather than the import-weighted index used in the main text Tables 1a&ndash;1b.</p>
+', if (ipi_available) dw_embed("TA1", wide = TRUE) else "", '
+<p><strong>Note:</strong> Table A1 uses overall PCE price indices (domestic + imported) rather than the import-weighted index used in the main text Table 1.</p>
 ', dw_embed("FA2"), '
 ', dw_embed("FA3"), '
 </section>

@@ -580,8 +580,13 @@ fig4_csv <- pce_combined %>%
   dplyr::select("Date" = date,
          "Core goods index" = core_goods_idx,
          "Core goods trend" = core_trend,
+         "Core goods trend lower" = core_lower,
+         "Core goods trend upper" = core_upper,
          "Durable goods index" = durables_idx,
-         "Durable goods trend" = dur_trend) %>%
+         "Durable goods trend" = dur_trend,
+         "Durable goods trend lower" = dur_lower,
+         "Durable goods trend upper" = dur_upper) %>%
+  mutate(across(matches("trend"), ~ ifelse(Date < as.Date("2024-12-01"), NA, .))) %>%
   mutate(Date = format_csv_date_line(Date))
 write_website_csv(fig4_csv, "F4_pce_prices_lp_trend.csv", "F4")
 
@@ -598,7 +603,7 @@ write_website_csv(fig5_csv, "F5_pce_deviation_from_trend.csv", "F5")
 if (ipi_available && exists("ipi_passthrough_jun") && exists("ipi_passthrough")) {
   t1_path <- file.path(CSV_DIR, "T1_ipi_passthrough.csv")
   tryCatch({
-    header_row <- ",Inputs,~~~,~~~,Price Changes,~~~,~~~,Implied Passthrough,~~~,~~~"
+    header_row <- ',\"~~~Inputs~~~\",,,\"~~~Price Changes~~~\",,,\"~~~Implied Passthrough~~~\",,'
     col_names <- c("Category", "Import share", "Tariff increase", "Expected effect",
                    "2025 Change", "vs LP Trend", "vs Log-Linear",
                    "2025 Change", "vs LP Trend", "vs Log-Linear")
@@ -627,8 +632,13 @@ if (ipi_available && exists("ipi_combined")) {
     dplyr::select("Date" = date,
            "Imported core goods index" = core_goods_idx,
            "Imported core goods trend" = core_trend,
+           "Imported core goods trend lower" = core_lower,
+           "Imported core goods trend upper" = core_upper,
            "Imported durables index" = durables_idx,
-           "Imported durables trend" = dur_trend) %>%
+           "Imported durables trend" = dur_trend,
+           "Imported durables trend lower" = dur_lower,
+           "Imported durables trend upper" = dur_upper) %>%
+    mutate(across(matches("trend"), ~ ifelse(Date < as.Date("2024-12-01"), NA, .))) %>%
     mutate(Date = format_csv_date_line(Date))
   write_website_csv(fig6_csv, "F6_imported_pce_prices.csv", "F6")
 
@@ -692,7 +702,9 @@ write_website_csv(fig14_csv, "F14_trade_deviation.csv", "F14")
 
 # F15: Cumulative Import Gap
 fig15_csv <- fig15_data %>%
-  dplyr::select(Date, `Monthly gap (billions USD)`, `Cumulative gap (billions USD)`) %>%
+  dplyr::select(Date,
+                "Monthly gap" = `Monthly gap (billions USD)`,
+                "Cumulative gap" = `Cumulative gap (billions USD)`) %>%
   mutate(Date = format_csv_date_line(Date))
 write_website_csv(fig15_csv, "F15_cumulative_import_gap.csv", "F15")
 
@@ -700,7 +712,7 @@ write_website_csv(fig15_csv, "F15_cumulative_import_gap.csv", "F15")
 {
   ta_path <- file.path(CSV_DIR, "TA_pce_passthrough.csv")
   tryCatch({
-    header_row <- ",Inputs,~~~,~~~,Price Changes,~~~,~~~,Implied Passthrough,~~~,~~~"
+    header_row <- ',\"~~~Inputs~~~\",,,\"~~~Price Changes~~~\",,,\"~~~Implied Passthrough~~~\",,'
     col_names <- c("Category", "Import share", "Tariff increase", "Expected effect",
                    "2025 Change", "vs LP Trend", "vs Log-Linear",
                    "2025 Change", "vs LP Trend", "vs Log-Linear")
@@ -735,8 +747,13 @@ if (exists("ll_combined")) {
     dplyr::select("Date" = date,
            "Core goods index" = core_goods_idx,
            "Core goods trend (log-linear)" = core_trend,
+           "Core goods trend lower (log-linear)" = core_lower,
+           "Core goods trend upper (log-linear)" = core_upper,
            "Durable goods index" = durables_idx,
-           "Durable goods trend (log-linear)" = dur_trend) %>%
+           "Durable goods trend (log-linear)" = dur_trend,
+           "Durable goods trend lower (log-linear)" = dur_lower,
+           "Durable goods trend upper (log-linear)" = dur_upper) %>%
+    mutate(across(matches("trend"), ~ ifelse(Date < as.Date("2024-12-01"), NA, .))) %>%
     mutate(Date = format_csv_date_line(Date))
   write_website_csv(figA2_csv, "FA2_pce_prices_loglinear_trend.csv", "FA2")
 }
