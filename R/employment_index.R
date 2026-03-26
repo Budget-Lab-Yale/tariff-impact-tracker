@@ -892,15 +892,21 @@ if (haver_available && length(all_y_codes) > 0) {
       filter(date == max(date)) %>%
       pivot_longer(
         cols = -date,
-        names_to = "var_name",
+        names_to = "haver_code_lower",
         values_to = "y_j"
+      ) %>%
+      mutate(
+        haver_code_lower = str_to_lower(str_extract(haver_code_lower, "^[a-z0-9]+"))
       )
 
-    # Join with crosswalk
+    # Join with crosswalk using haver codes (CSV columns are lowercase Haver codes)
+    y_j_crosswalk_lower <- y_j_crosswalk %>%
+      mutate(haver_code_lower = str_to_lower(str_extract(haver_code, "^[a-zA-Z0-9]+")))
+
     y_j_data <- y_j_existing %>%
       left_join(
-        y_j_crosswalk %>% dplyr::select(bea_industry, var_name),
-        by = "var_name"
+        y_j_crosswalk_lower %>% dplyr::select(bea_industry, haver_code_lower),
+        by = "haver_code_lower"
       ) %>%
       filter(!is.na(bea_industry)) %>%
       dplyr::select(bea_code_j = bea_industry, y_j)
