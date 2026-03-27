@@ -153,7 +153,8 @@ fig2_data <- tariff_revenue %>%
   dplyr::select("Date" = date,
                 "Customs duties (nominal USD)" = customs_duties,
                 "Import values (nominal USD)" = imports_value,
-                "Effective tariff rate (%)" = effective_rate)
+                "Effective tariff rate (%)" = effective_rate) %>%
+  mutate("2022-2024 average (%)" = BASELINE_TARIFF_RATE * 100)
 add_tbl_sheet(wb, "F2", fig2_data,
   title    = fig_excel_title("F2"),
   subtitle = fig_meta("F2", "subtitle"),
@@ -566,7 +567,7 @@ if (daily_etr_available && exists("fig1_data_etr")) {
 }
 
 # F2: Effective Tariff Rate
-fig2_csv <- fig2_data %>% dplyr::select(Date, `Effective tariff rate (%)`)
+fig2_csv <- fig2_data %>% dplyr::select(Date, `Effective tariff rate (%)`, `2022-2024 average (%)`)
 write_website_csv(fig2_csv, "F2_effective_tariff_rate.csv", "F2")
 
 # F3: Revenue

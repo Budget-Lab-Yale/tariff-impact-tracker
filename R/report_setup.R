@@ -370,6 +370,17 @@ OUTPUT_DIR <- here("output")
 source(here("R", "utils.R"))
 
 # Core data files - normalize all dates to first-of-month
+# Validate required files exist before loading
+REQUIRED_CSVS <- c("tariff_revenue.csv", "import_shares.csv", "pce_prices.csv",
+                    "import_prices.csv", "employment.csv", "industrial_production.csv",
+                    "trade_flows.csv", "fed_policy.csv", "exchange_rates.csv",
+                    "twi_long.csv", "cpi_data.csv")
+missing_csvs <- REQUIRED_CSVS[!file.exists(file.path(OUTPUT_DIR, REQUIRED_CSVS))]
+if (length(missing_csvs) > 0) {
+  stop("Missing required data files in output/. Run tariff_impacts_work.R first.\n  Missing: ",
+       paste(missing_csvs, collapse = ", "))
+}
+
 tariff_revenue <- read_csv(file.path(OUTPUT_DIR, "tariff_revenue.csv"), show_col_types = FALSE) %>% normalize_monthly_dates()
 import_shares <- read_csv(file.path(OUTPUT_DIR, "import_shares.csv"), show_col_types = FALSE) %>% normalize_monthly_dates()
 pce_prices <- read_csv(file.path(OUTPUT_DIR, "pce_prices.csv"), show_col_types = FALSE) %>% normalize_monthly_dates()
@@ -471,10 +482,12 @@ if (ipi_available) {
   IPI_EFF_SHARE_DUR <- ipi_eff_shares$effective_import_share[ipi_eff_shares$variant == "durables"]
 }
 
-# Import content shares for passthrough calculations
+# Import content shares for passthrough calculations (fallback to defaults if NA or missing)
 if (ipi_available) {
   IMPORT_SHARE_CORE_GOODS <- ipi_eff_shares$effective_import_share[ipi_eff_shares$variant == "core_goods"]
   IMPORT_SHARE_DURABLES <- ipi_eff_shares$effective_import_share[ipi_eff_shares$variant == "durables"]
+  if (length(IMPORT_SHARE_CORE_GOODS) == 0 || is.na(IMPORT_SHARE_CORE_GOODS)) IMPORT_SHARE_CORE_GOODS <- 0.25
+  if (length(IMPORT_SHARE_DURABLES) == 0 || is.na(IMPORT_SHARE_DURABLES)) IMPORT_SHARE_DURABLES <- 0.30
 } else {
   IMPORT_SHARE_CORE_GOODS <- 0.25
   IMPORT_SHARE_DURABLES <- 0.30
@@ -570,6 +583,7 @@ revenue_2025_data <- revenue_with_cpi %>%
   filter(date >= as.Date("2025-01-01"))
 
 total_excess_rev <- sum(revenue_2025_data$customs_real - (pre_2025_monthly_rev * 1000), na.rm = TRUE) / 1000
+net_excess_rev <- total_excess_rev - 165  # Revenue less estimated $165B IEEPA refunds
 months_of_2025 <- nrow(revenue_2025_data)
 
 excess_rev_2025_only <- revenue_2025_data %>%
@@ -707,7 +721,7 @@ if (!is.null(tk_tau_c_data)) {
 }
 
 if (ipi_available) {
-  tk_ipi_base_date <- get_base_date(ipi_data, "date")
+  tk_ipi_base_date <- as.Date("2024-12-01")
   tk_ipi_dec_core <- get_base_value(ipi_data, "imported_core_goods", tk_ipi_base_date)
   tk_ipi_dec_dur <- get_base_value(ipi_data, "imported_durables", tk_ipi_base_date)
   tk_ipi_latest <- ipi_data %>% filter(date == max(date))
@@ -843,7 +857,7 @@ tariff_increase <- latest_tariff / 100 - BASELINE_TARIFF_RATE
 expected_core <- tariff_increase * IMPORT_SHARE_CORE_GOODS * 100
 expected_dur <- tariff_increase * IMPORT_SHARE_DURABLES * 100
 
-pce_base_date <- get_base_date(pce_prices, "date")
+pce_base_date <- as.Date("2024-12-01")
 dec_base_core <- get_base_value(pce_prices, "pce_core_goods", pce_base_date)
 dec_base_dur <- get_base_value(pce_prices, "pce_durables", pce_base_date)
 
@@ -908,6 +922,13 @@ pt_dur_ll <- safe_divide(trend_dur_ll, expected_dur) * 100
 pt_dur_simple <- safe_divide(ytd_dur, expected_dur) * 100
 
 data_month <- format(max(pce_prices$date), "%B %Y")
+
+# Latest month with complete Census trade data (non-NA effective rate)
+latest_census_row <- tariff_revenue %>%
+  filter(!is.na(effective_rate)) %>%
+  filter(date == max(date))
+latest_census_month <- format(latest_census_row$date, "%B %Y")
+latest_census_rate <- latest_census_row$effective_rate
 
 nov_2025_rate <- tariff_revenue %>%
   filter(year == 2025, month == 11) %>%
@@ -1033,7 +1054,7 @@ if (ipi_available) {
   ipi_pt_core_ll <- safe_divide(ipi_trend_core_ll, ipi_expected_core) * 100
   ipi_pt_dur_ll <- safe_divide(ipi_trend_dur_ll, ipi_expected_dur) * 100
 
-  ipi_base_date <- get_base_date(ipi_data, "date")
+  ipi_base_date <- as.Date("2024-12-01")
   ipi_dec_base_core <- get_base_value(ipi_data, "imported_core_goods", ipi_base_date)
   ipi_dec_base_dur <- get_base_value(ipi_data, "imported_durables", ipi_base_date)
   ipi_latest_prices <- ipi_data %>% filter(date == max(date))
@@ -1429,7 +1450,7 @@ cumulative_imports <- cumulative_trade %>%
 # IMPORT PRICE FIGURE DATA (Figure 8)
 # ==============================================================================
 
-import_base_date <- get_base_date(import_prices, "date")
+import_base_date <- as.Date("2024-12-01")
 dec_base_import <- get_base_value(import_prices, "import_price_nonpetroleum", import_base_date)
 
 import_indexed <- import_prices %>%
