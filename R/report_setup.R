@@ -527,6 +527,12 @@ safe_fmt <- function(x, fmt = "%.1f", default = "N/A") {
   sprintf(fmt, x[1])
 }
 
+# Dollar-formatted value (no space between $ and number)
+dollar_fmt <- function(x, fmt = "%.1f", default = "N/A") {
+  if (is.null(x) || length(x) == 0 || is.na(x[1])) return(default)
+  paste0("$", sprintf(fmt, x[1]))
+}
+
 format_date_long <- function(d = Sys.Date()) {
   day <- as.integer(format(d, "%d"))
   suffix <- if (day %% 100 %in% 11:13) "th"
@@ -543,6 +549,12 @@ fmt_pct <- function(x) {
 fmt_pt <- function(x) {
   if (length(x) == 0 || is.na(x)) return("N/A")
   sprintf("%.0f%%", x)
+}
+
+# Compare two values: returns "higher" or "lower"
+higher_lower <- function(x, ref) {
+  if (any(is.na(c(x, ref)))) return("similar to")
+  if (x > ref) "higher than" else if (x < ref) "lower than" else "equal to"
 }
 
 # Format monthly dates for CSV
@@ -639,6 +651,21 @@ core_ytd_change <- if (nrow(pce_dec_2024) > 0 && nrow(latest_pce) > 0) {
 dur_ytd_change <- if (nrow(pce_dec_2024) > 0 && nrow(latest_pce) > 0) {
   (latest_pce$pce_durables[1] / pce_dec_2024$pce_durables[1] - 1) * 100
 } else { NA }
+
+# Year-over-year PCE price changes (from same month one year prior)
+pce_1yr_ago <- pce_prices %>%
+  filter(date == max(pce_2025$date) %m-% months(12)) %>%
+  slice(1)
+
+core_yoy_change <- if (nrow(pce_1yr_ago) > 0 && nrow(latest_pce) > 0) {
+  (latest_pce$pce_core_goods[1] / pce_1yr_ago$pce_core_goods[1] - 1) * 100
+} else { NA }
+
+dur_yoy_change <- if (nrow(pce_1yr_ago) > 0 && nrow(latest_pce) > 0) {
+  (latest_pce$pce_durables[1] / pce_1yr_ago$pce_durables[1] - 1) * 100
+} else { NA }
+
+pce_yoy_month <- if (nrow(pce_1yr_ago) > 0) format(pce_1yr_ago$date, "%B %Y") else "N/A"
 
 comparison_month <- if (nrow(pce_2025) > 0) month(max(pce_2025$date)) else 6
 
