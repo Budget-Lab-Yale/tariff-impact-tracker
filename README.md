@@ -26,7 +26,7 @@ install.packages("Haver", repos = "http://www.haver.com/r/")
 
 ## Quick Start
 
-### Option 1: Run Everything
+### Option 1: Run Everything (Development)
 
 ```r
 source("run_all.R")
@@ -40,7 +40,28 @@ This will:
 5. Generate the main HTML report with Excel data export
 6. Generate the standalone methodology document
 
-### Option 2: Run Step by Step
+### Option 2: Publication Run
+
+To generate all outputs **plus** the Drupal HTML fragment, copy final files to `output/publication/`, and create a dated vintage snapshot:
+
+```bash
+# From the command line
+PUBLICATION_RUN=TRUE Rscript run_all.R
+```
+
+```r
+# Or from within R
+Sys.setenv(PUBLICATION_RUN = "TRUE")
+source("run_all.R")
+```
+
+In addition to the standard pipeline, publication mode:
+- Generates the Drupal HTML fragment (`website/html/tariff_impacts_report_drupal.html`)
+- Copies final outputs (`.xlsx`, `.docx`, `.html`) to `output/publication/`
+- Saves a dated vintage snapshot to `website/vintages/YYYYMMDD/`
+- Cleans up old dated results files, keeping only today's
+
+### Option 3: Run Step by Step
 
 ```r
 # Step 1: Run core data processing (requires Haver; skip if using cached CSVs)
