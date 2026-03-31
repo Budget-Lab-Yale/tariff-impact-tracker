@@ -80,7 +80,12 @@ check_haver_available <- function() {
     if (!requireNamespace("Haver", quietly = TRUE)) {
       return(FALSE)
     }
-    Haver::haver.direct("on")
+    # Must use library() not just requireNamespace() -- Haver's .onAttach
+    # initializes the DLL state that haver.direct() depends on.
+    # suppressWarnings handles the "database path failed" message (expected
+    # in server-only / direct mode with no local .dat files).
+    suppressWarnings(library(Haver, quietly = TRUE))
+    haver.direct("on")
     TRUE
   }, error = function(e) {
     FALSE

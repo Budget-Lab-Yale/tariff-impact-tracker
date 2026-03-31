@@ -99,17 +99,28 @@ log_msg("INFO", "=" %>% rep(60) %>% paste(collapse = ""))
 #   TMMCN@USINT  = Goods imports, customs value ($M, SAAR)
 # ------------------------------------------------------------------------------
 
-tariff_revenue <- pull_rename_save(
-  c("FTRU@GOVFIN", "TMMCN@USINT"),
-  c(ftru = "customs_duties", tmmcn = "imports_value"),
-  "tariff_revenue", START_LONG,
-  transform_fn = function(d) {
-    d %>% mutate(
+# Pull each series separately and merge -- GOVFIN and USINT often update on
+# different schedules, and haver.data() fails when series lengths differ.
+customs_raw  <- pull_haver_local("FTRU@GOVFIN", "monthly", START_LONG)
+imports_raw  <- pull_haver_local("TMMCN@USINT", "monthly", START_LONG)
+
+if (!is.null(customs_raw) || !is.null(imports_raw)) {
+  tariff_revenue <- full_join(
+    customs_raw %>% rename(customs_duties = ftru),
+    imports_raw %>% rename(imports_value = tmmcn),
+    by = "date"
+  ) %>%
+    mutate(
       effective_rate = (customs_duties / imports_value) * 100,
       year = year(date), month = month(date)
-    )
-  }
-)
+    ) %>%
+    arrange(date)
+  write_csv(tariff_revenue, file.path(OUTPUT_DIR, "tariff_revenue.csv"))
+  log_msg("INFO", paste0("tariff_revenue: ", nrow(tariff_revenue), " rows"))
+} else {
+  tariff_revenue <- NULL
+  log_msg("WARN", "tariff_revenue: both series unavailable")
+}
 
 # ------------------------------------------------------------------------------
 # 2.2 Import Shares by Country

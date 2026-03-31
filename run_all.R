@@ -175,7 +175,8 @@ log_msg("INFO", paste("Working directory:", here()))
 # Check Haver availability (requireNamespace, not library -- Haver is optional)
 haver_available <- tryCatch({
   if (!requireNamespace("Haver", quietly = TRUE)) stop("not installed")
-  Haver::haver.direct("on")
+  suppressWarnings(library(Haver, quietly = TRUE))
+  haver.direct("on")
   TRUE
 }, error = function(e) FALSE)
 
