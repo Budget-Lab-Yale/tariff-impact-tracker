@@ -669,20 +669,22 @@ pce_yoy_month <- if (nrow(pce_1yr_ago) > 0) format(pce_1yr_ago$date, "%B %Y") el
 
 comparison_month <- if (nrow(pce_2025) > 0) month(max(pce_2025$date)) else 6
 
+# Comparison window: same N-month change starting from Dec 2022 → month N of 2024
+# (i.e., the 2-year-prior analog of Dec 2024 → month N of 2026)
 pce_dec_2022 <- pce_prices %>%
   filter(year(date) == 2022, month(date) == 12) %>%
   slice(1)
 
-pce_2023_same <- pce_prices %>%
-  filter(year(date) == 2023, month(date) == comparison_month) %>%
+pce_comparison_end <- pce_prices %>%
+  filter(year(date) == 2024, month(date) == comparison_month) %>%
   slice(1)
 
-core_2023_change <- if (nrow(pce_dec_2022) > 0 && nrow(pce_2023_same) > 0) {
-  (pce_2023_same$pce_core_goods[1] / pce_dec_2022$pce_core_goods[1] - 1) * 100
+core_2023_change <- if (nrow(pce_dec_2022) > 0 && nrow(pce_comparison_end) > 0) {
+  (pce_comparison_end$pce_core_goods[1] / pce_dec_2022$pce_core_goods[1] - 1) * 100
 } else { NA }
 
-dur_2023_change <- if (nrow(pce_dec_2022) > 0 && nrow(pce_2023_same) > 0) {
-  (pce_2023_same$pce_durables[1] / pce_dec_2022$pce_durables[1] - 1) * 100
+dur_2023_change <- if (nrow(pce_dec_2022) > 0 && nrow(pce_comparison_end) > 0) {
+  (pce_comparison_end$pce_durables[1] / pce_dec_2022$pce_durables[1] - 1) * 100
 } else { NA }
 
 # Passthrough estimates for Key Takeaways (simple + LP methods)
