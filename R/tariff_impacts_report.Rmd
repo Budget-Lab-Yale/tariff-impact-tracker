@@ -35,7 +35,7 @@ is_word <- !is.null(knitr::pandoc_to()) && knitr::pandoc_to() == "docx"
 
 - **Updated economic indicators:** This report reviews economic indicators that are related to the effect of Tariffs on the US Economy as of `r format_date_long()`. For the most part, given data lags, the findings reflect the conditions prior to the Supreme Court decision vacating IEEPA tariffs on February 20th, 2026.
 - **Tariff revenue:** The 2025 tariffs have raised an estimated `r dollar_fmt(total_excess_rev)` billion in inflation-adjusted customs revenue above the 2022--2024 average as of `r latest_month_name`, with the effective tariff rate reaching `r safe_fmt(latest_tariff_rate)`% in `r latest_tariff_month`.
-- **Pass-through to consumer prices:** Imported PCE core goods and durable goods prices have risen `r safe_fmt(tk_ipi_ytd_core)`% and `r safe_fmt(tk_ipi_ytd_dur)`% respectively during 2025 through `r data_month_name`, both well above prior-year comparisons. Implied passthrough of tariffs to imported consumer goods prices ranges from roughly `r safe_fmt(tk_ipi_core_low, "%.0f")`--`r safe_fmt(tk_ipi_core_high, "%.0f")`% for core goods and `r safe_fmt(tk_ipi_dur_low, "%.0f")`--`r safe_fmt(tk_ipi_dur_high, "%.0f")`% for durables, depending on methodology (see Tables 1a--1b).
+- **Pass-through to consumer prices:** Imported PCE core goods and durable goods prices have both risen by `r safe_fmt(tk_ipi_ytd_core)`% during 2025 through `r data_month_name`, both well above prior-year comparisons. Implied passthrough of tariffs to imported consumer goods prices ranges from roughly `r safe_fmt(tk_ipi_core_low, "%.0f")`--`r safe_fmt(tk_ipi_core_high, "%.0f")`% for core goods and `r safe_fmt(tk_ipi_dur_low, "%.0f")`--`r safe_fmt(tk_ipi_dur_high, "%.0f")`% for durables, depending on methodology (see Tables 1a--1b).
 - **Employment:** There is no definitive indication of a significant aggregate labor market effect so far, though tariff-exposed industries show some signs of weakness relative to pre-2025 trend.
 
 ---
@@ -308,7 +308,7 @@ if (!is.na(tau_core_recent)) {
 
 ### Import Prices
 
-As noted above, there are other groups beyond US consumers that might bear the burden of tariffs. For some of these groups (e.g. firms and their shareholders) it is difficult to observe these effects directly. However, we can observe import prices: if foreign producers are willing to accept lower prices on their exports, the incidence of tariffs could fall, at least in part, on them. Below, we plot non-petroleum import prices, and find no evidence of a reduction in prices as a response to tariffs. This is a noisy series, so a response is possible: potentially import prices would have continued on their 2024 trajectory. But there is no clear evidence of a reduction in these prices.
+As noted above, there are other groups beyond US consumers that might bear the burden of tariffs. For some of these groups (e.g. firms and their shareholders) it is difficult to observe these effects directly. However, we can observe import prices: if foreign producers are willing to accept lower prices on their exports, the incidence of tariffs could fall, at least in part, on them. Below, we plot non-petroleum import prices, and find that in recent months prices have risen over their pre-2025 trend. This is a noisy series, so this effect should not be viewed as causal, but the evidence indicates that foreign producers are not willing to accept lower prices on imports, rather the opposite.
 
 ```{r fig-import-prices}
 import_trend %>%
