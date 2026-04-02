@@ -102,38 +102,38 @@ cat('<article class="tariff-impacts-report ck-content">
 <section class="paragraph paragraph--key-takeaways" data-js="key-takeaways">
 <h2 class="paragraph__title">Key Takeaways</h2>
 <ol class="paragraph__key-takeaways-list">
-<li class="paragraph__key-takeaway-item"><div><p><strong>Updated economic indicators:</strong> This report reviews economic indicators that are related to the effect of Tariffs on the US Economy as of ', format_date_long(), '. For the most part, given data lags, the findings reflect the conditions prior to the Supreme Court decision vacating IEEPA tariffs on February 20th, 2026.</p></div></li>
+<li class="paragraph__key-takeaway-item"><div><p><strong>Updated economic indicators:</strong> This report reviews economic indicators that are related to the effect of tariffs on the US economy as of ', format_date_long(), '. For the most part, given data lags, the findings reflect the conditions prior to the Supreme Court decision vacating IEEPA tariffs on February 20th, 2026.</p></div></li>
 <li class="paragraph__key-takeaway-item"><div><p><strong>Tariff revenue:</strong> The 2025 tariffs have raised an estimated $', safe_fmt(total_excess_rev), ' billion in inflation-adjusted customs revenue above the 2022&ndash;2024 average as of ', latest_month_name, ', with the effective tariff rate reaching ', safe_fmt(latest_tariff_rate), '% in ', latest_tariff_month, '.</p></div></li>
 <li class="paragraph__key-takeaway-item"><div><p><strong>Pass-through to consumer prices:</strong> Imported PCE core goods and durable goods prices have both risen by ', safe_fmt(tk_ipi_ytd_core), '% during 2025 through ', data_month_name, ', both well above prior-year comparisons. Implied passthrough of tariffs to imported consumer goods prices ranges from roughly ', safe_fmt(tk_ipi_core_low, "%.0f"), '&ndash;', safe_fmt(tk_ipi_core_high, "%.0f"), '% for core goods and ', safe_fmt(tk_ipi_dur_low, "%.0f"), '&ndash;', safe_fmt(tk_ipi_dur_high, "%.0f"), '% for durables, depending on methodology (see Table 1).</p></div></li>
 <li class="paragraph__key-takeaway-item"><div><p><strong>Employment:</strong> There is no definitive indication of a significant aggregate labor market effect so far, though tariff-exposed industries show some signs of weakness relative to pre-2025 trend.</p></div></li>
 </ol>
 </section>
 </div>
-')
+', sep = "")
 ```
 
 ```{r introduction}
 cat('<section id="introduction" class="layout layout--margin-bottom-sm">
 <h2>Introduction</h2>
 <p>In response to new tariff announcements, The Budget Lab (TBL) regularly estimates fiscal and macroeconomic effects resulting from policy; TBL published its latest report on <a href="https://budgetlab.yale.edu/research/state-tariffs-march-9-2026">March 9th</a>, and we aim to update these projections as we refine our methodology and as policies change. These analyses rely on projections from well-respected economic and trade models, including the MA/US macroeconometric model (currently maintained by S&amp;P Global) for short-run analysis and the Global Trade Analysis Project (GTAP) model for medium/long-run analysis.</p>
-<p>This analysis provides monthly updates on how actual economic indicators are responding to tariff changes, which serves as both a check on the assumptions made by economic models and as well as a real-time assessment of how tariffs are impacting the US economy. In particular, we consider the impact of tariffs on revenues, prices, trade, and labor markets. Critically, these are not causal estimates of the effect of tariffs on the economy, but rather constitute a descriptive attempt to explore how the economy is changing with tariffs. There are a number of other economic changes happening concurrently, including but not limited to the growth of generative AI and the passage of the One Big Beautiful Bill Act, which we do not control for in the series presented below. This report was updated using data as of ', format_date_long(), '.</p>
-<p>Overall, there is evidence, consistent with economic theory, that tariffs have raised both additional revenue ($', safe_fmt(total_excess_rev), ' Billion above the 2022&ndash;2024 average) and led to higher prices (Personal Consumption Expenditure (PCE) core goods up ', safe_fmt(core_yoy_change), '% year-over-year as of ', data_month, '). However, after the SCOTUS decision on the IEEPA tariffs, approximately $165 billion dollars in unlawfully collected duties may be refunded to importers. This implies that tariffs so far have raised $', safe_fmt(net_excess_rev), ' billion of revenue through ', latest_rev_date, '. There is less clear evidence about the impacts of tariffs on the wider economy: for example, employment in tariff-exposed industries is not appreciably lower or higher than what would have been expected prior to 2025. Importantly, these statistics are representations of the current economy, and it is difficult to disentangle what changed due to tariffs versus the many other economic changes over the past year. It is still early and the effects of tariffs may evolve and change over time as consumers, businesses, and policymakers respond. Importantly, with the exception of currency data, we do not yet have outcomes that reflect the economic reality after the Supreme Court decision rolling back the President&rsquo;s authority to use the International Emergency Economic Powers Act (IEEPA) to impose tariffs.</p>
+<p>This analysis provides monthly updates on how actual economic indicators are responding to tariff changes, which serves as both a check on the assumptions made by economic models and as a real-time assessment of how tariffs are impacting the US economy. In particular, we consider the impact of tariffs on revenues, prices, trade, and labor markets. Critically, these are not causal estimates of the effect of tariffs on the economy, but rather constitute a descriptive attempt to explore how the economy is changing with tariffs. There are a number of other economic changes happening concurrently, including but not limited to the growth of generative AI and the passage of the One Big Beautiful Bill Act, which we do not control for in the series presented below. This report was updated using data as of ', format_date_long(), '.</p>
+<p>Overall, there is evidence, consistent with economic theory, that tariffs have raised both additional revenue ($', safe_fmt(total_excess_rev), ' billion above the 2022&ndash;2024 average) and led to higher prices (Personal Consumption Expenditure (PCE) core goods up ', safe_fmt(core_yoy_change), '% year-over-year as of ', data_month, '). However, after the SCOTUS decision on the IEEPA tariffs, approximately $165 billion in unlawfully collected duties may be refunded to importers. This implies that tariffs so far have raised $', safe_fmt(net_excess_rev), ' billion of revenue through ', latest_rev_date, '. There is less clear evidence about the impacts of tariffs on the wider economy: for example, employment in tariff-exposed industries is not appreciably lower or higher than what would have been expected prior to 2025. Importantly, these statistics are representations of the current economy, and it is difficult to disentangle what changed due to tariffs versus the many other economic changes over the past year. It is still early and the effects of tariffs may evolve and change over time as consumers, businesses, and policymakers respond. Importantly, with the exception of currency data, we do not yet have outcomes that reflect the economic reality after the Supreme Court decision rolling back the President&rsquo;s authority to use the International Emergency Economic Powers Act (IEEPA) to impose tariffs.</p>
 </section>
-')
+', sep = "")
 ```
 
 ```{r revenue}
 cat('<section id="tariff-rates-and-revenue" class="layout layout--margin-bottom-sm">
 <h2>Tariff Rates and Revenue</h2>
 <p>Tariffs are a tax on imports, therefore higher tariffs will increase revenues if their effect on imports is not sufficiently prohibitive. TBL&rsquo;s <a href="https://github.com/Budget-Lab-Yale/tariff-rate-tracker">Tariff Rate Tracker</a> follows the full schedule of statutory tariff rates as encoded in the Harmonized Tariff Schedule (HTS), weighted by 2024 import values. As of ', format(Sys.Date(), "%B %d, %Y"), ', the import-weighted average effective tariff rate stood at ', safe_fmt(latest_etr_pct, "%.1f"), '% (see Figure A1 in the <a href="#appendix">Appendix below</a> for a decomposition by tariff authority). This rate incorporates the changes to the tariff regime after the Supreme Court held 6&ndash;3 in <em>Learning Resources, Inc. v. Trump</em> that the use of IEEPA to impose tariffs exceeded presidential authority. This includes both the removal of all IEEPA-based tariffs and the implementation of Section 122 tariffs for a 150 day period. Tariffs imposed using other authorities remain in effect. We anticipate that refunds will be issued for revenue collected via IEEPA-based tariffs. The customs revenue data presented in this report do not yet cover the post-SCOTUS period, and substantial uncertainty remains, both about the timing of refunds and the eventual structure of the post-IEEPA tariff regime.</p>
-<p>The tariff revenue and rate numbers reported here are a different measure than the numbers reported in TBL&rsquo;s State of Tariff Report. The effective tariff rates (ETRs) reported here are actual tariff duties divided by the value of customs, meaning that they incorporate any avoidance behavior by firms, importers, or other actors. The effective tariff rates reported in TBL&rsquo;s State of Tariff Report are model-based estimates of the average rates across sectors, weighted by 2024 trade flows. In that report, we include two measures of average ETRs: pre-substitution and post-substitution. In our modeling of the general revenue effects of tariffs, our last pre-SCOTUS estimate of tariff revenue was projected to raise $246 billion in annual revenue for fiscal year (FY) 2026 (conventionally). This is lower than the annualized revenue we would expect if monthly tariff revenue remained at its current level (2-month average of ', annualized_rev_months, ' projected forward) for the rest of the fiscal year ($', safe_fmt(annualized_rev, "%.0f"), ' billion). However, the revenue estimates in the State of Tariff Report account for decreases in other revenue sources, like federal payroll and corporate income taxes, following the methodology of the <a href="https://www.cbo.gov/publication/58549">U.S. Congressional Budget Office</a>. Adjusting for that gives us a simulated annual revenue of $319 billion, notably closer to the annualized tariff revenue level suggested by the customs data.</p>
+<p>The tariff revenue and rate numbers reported here are a different measure than the numbers reported in TBL&rsquo;s State of Tariff Report. The effective tariff rates (ETRs) reported here are actual tariff duties divided by the value of customs, meaning that they incorporate any avoidance behavior by firms, importers, or other actors. The effective tariff rates reported in TBL&rsquo;s State of Tariff Report are model-based estimates of the average rates across sectors, weighted by 2024 trade flows. In that report, we include two measures of average ETRs: pre-substitution and post-substitution. In our modeling of the general revenue effects of tariffs, our last pre-SCOTUS estimate of tariff revenue was projected to raise &#36;246 billion in annual revenue for fiscal year (FY) 2026 (conventionally). This is lower than the annualized revenue we would expect if monthly tariff revenue remained at its current level (2-month average of ', annualized_rev_months, ' projected forward) for the rest of the fiscal year (&#36;', safe_fmt(annualized_rev, "%.0f"), ' billion). However, the revenue estimates in the State of Tariff Report account for decreases in other revenue sources, like federal payroll and corporate income taxes, following the methodology of the <a href="https://www.cbo.gov/publication/58549">U.S. Congressional Budget Office</a>. Adjusting for that gives us a simulated annual revenue of &#36;319 billion, notably closer to the annualized tariff revenue level suggested by the customs data.</p>
 <p>Higher effective tariff rates have translated directly into additional customs revenue. Before 2025, the US collected $', safe_fmt(pre_2025_monthly_rev), ' billion a month in net customs duty revenues. Since then, tariffs have raised roughly $', safe_fmt(total_excess_rev), ' billion in revenues above the 2022&ndash;2024 average, with $', safe_fmt(excess_rev_2025_only), ' billion collected over the course of 2025 and about $', safe_fmt(latest_month_rev), ' billion of that new tariff revenue posted in ', latest_month_name, ' alone, though again, approximately $165 billion may be returned to importers and consumers via refunds of IEEPA tariffs.</p>
 
 ', if (daily_etr_available) dw_embed("F1") else "", '
 ', dw_embed("F2"), '
 ', dw_embed("F3"), '
 </section>
-')
+', sep = "")
 ```
 
 ```{r prices}
@@ -180,7 +180,7 @@ cat('<section id="prices-consumer-passthrough" class="layout layout--margin-bott
 </div>
 
 </section>
-')
+', sep = "")
 ```
 
 ```{r labor}
@@ -193,7 +193,7 @@ cat('<section id="labor-market" class="layout layout--margin-bottom-sm">
 ', if (tariff_emp_available) dw_embed("F9") else "", '
 ', if (tariff_emp_mfg_available) dw_embed("F10") else "", '
 </section>
-')
+', sep = "")
 ```
 
 ```{r industrial}
@@ -203,7 +203,7 @@ cat('<section id="industrial-output" class="layout layout--margin-bottom-sm">
 
 ', dw_embed("F11"), '
 </section>
-')
+', sep = "")
 ```
 
 ```{r dollar}
@@ -216,7 +216,7 @@ cat('<section id="us-dollar" class="layout layout--margin-bottom-sm">
 
 ', dw_embed("F12"), '
 </section>
-')
+', sep = "")
 ```
 
 ```{r trade}
@@ -230,7 +230,7 @@ cat('<section id="imports-exports" class="layout layout--margin-bottom-sm">
 ', dw_embed("F14"), '
 ', dw_embed("F15"), '
 </section>
-')
+', sep = "")
 ```
 
 ```{r sources}
@@ -259,5 +259,5 @@ cat('<section id="appendix" class="layout layout--margin-bottom-sm layout--one-c
 </section>
 
 </article>
-')
+', sep = "")
 ```
