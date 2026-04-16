@@ -13,6 +13,10 @@ output/*.html
 output/*.xlsx
 output/*.docx
 # Publication outputs ARE tracked (output/publication/)
+figure/
+
+# Knit support files (CSS/JS/images generated alongside HTML)
+website/html/*_files/
 
 # Logs
 logs/*.log
@@ -38,15 +42,21 @@ input/usitc_api_token.txt
 input/old_calc/
 input/ancillary/
 
-# Claude Code configuration (local workflow)
+# AI assistant configuration (local workflow)
 .claude/
 CLAUDE.md
+.agents/
+AGENTS.md
 quality_reports/
 
 # Python artifacts
 __pycache__/
 *.pyc
 
+# Website vintages (redundant with git history on website/csv/)
+website/vintages/
+
 # Temporary/scratch files
 input/Book*.xlsx
 *.tmp
+Tariff Impact Tracker todo.txt
