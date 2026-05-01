@@ -38,11 +38,15 @@ dir.create(LOG_DIR, showWarnings = FALSE, recursive = TRUE)
 # Create log file with timestamp
 LOG_FILE <- file.path(LOG_DIR, paste0("run_all_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".log"))
 
-# Initialize log file
-cat(paste0("Tariff Impacts Pipeline Log\n"),
-    paste0("Started: ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n"),
-    paste0(rep("=", 70), "\n"),
-    file = LOG_FILE, sep = "")
+# Source shared utilities early so we can use create_logger() instead of
+# duplicating the logger here. utils.R has no top-level library() calls --
+# its dplyr/lubridate dependencies are namespaced inside function bodies, so
+# sourcing it before the Step 1 package check is safe.
+suppressPackageStartupMessages(library(here))
+source(file.path("R", "utils.R"))
+
+# Single project-wide logger; binds to LOG_FILE and writes a header line.
+log_msg <- create_logger(LOG_FILE)
 
 # ==============================================================================
 # CONFIGURATION
@@ -55,6 +59,13 @@ cat(paste0("Tariff Impacts Pipeline Log\n"),
 PUBLICATION_RUN <- as.logical(Sys.getenv("PUBLICATION_RUN", unset = "FALSE"))
 if (is.na(PUBLICATION_RUN)) PUBLICATION_RUN <- FALSE
 cat("Run mode:", if (PUBLICATION_RUN) "PUBLICATION (outputs copied to publication/ and website/)" else "LOCAL (development only)", "\n\n")
+
+# Offline flag: when TRUE, skip all live data pulls (Haver, USITC DataWeb) and
+# rely on cached CSVs already in input/ and output/. Default FALSE. Set via
+# environment variable: OFFLINE_RUN=TRUE Rscript run_all.R
+OFFLINE_RUN <- as.logical(Sys.getenv("OFFLINE_RUN", unset = "FALSE"))
+if (is.na(OFFLINE_RUN)) OFFLINE_RUN <- FALSE
+if (OFFLINE_RUN) cat("Mode: OFFLINE -- live data pulls (Haver, DataWeb) will be skipped\n\n")
 
 # Required packages (Haver is optional -- loaded conditionally via check_haver_available())
 REQUIRED_PACKAGES <- c(
@@ -84,7 +95,7 @@ REQUIRED_PACKAGES <- c(
 #                   import_price_index_required_inputs() in R/import_price_index.R
 # Keep these in sync -- each script validates its own inputs at runtime.
 EMP_INDEX_INPUTS <- c(
-  "USITC - Customs and Duties - January 2026.xlsx",
+  "customs_duties_by_naics.csv",
   "BEA - Import Matrix, Before Redefinitions - Summary - 2024.xlsx",
   "BEA - The Use of Commodities by Industry - Summary - 2024.xlsx",
   "x_codes.csv",
@@ -100,18 +111,6 @@ IPI_INPUTS <- c(
 # ==============================================================================
 # HELPER FUNCTIONS
 # ==============================================================================
-
-# Simple log_msg for early use (before utils.R is sourced)
-log_msg <- function(level, message) {
-  timestamp <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-  log_line <- paste0("[", timestamp, "][", level, "] ", message, "\n")
-  # Print to console
-  cat(log_line)
-  # Append to log file
-  if (exists("LOG_FILE") && file.exists(dirname(LOG_FILE))) {
-    cat(log_line, file = LOG_FILE, append = TRUE)
-  }
-}
 
 install_missing_packages <- function(packages) {
   missing <- packages[!sapply(packages, requireNamespace, quietly = TRUE)]
@@ -154,8 +153,7 @@ log_msg("INFO", "All required packages available")
 
 log_msg("INFO", "Step 2: Validating environment...")
 
-# Load here package for path management
-library(here)
+# `here` is already loaded during the early logger bootstrap above.
 
 # Check if we're in the right project directory
 if (!file.exists(here("R", "tariff_impacts_work.R"))) {
@@ -173,7 +171,8 @@ dir.create(here("website", "vintages"), showWarnings = FALSE, recursive = TRUE)
 log_msg("INFO", paste("Working directory:", here()))
 
 # Check Haver availability (requireNamespace, not library -- Haver is optional)
-haver_available <- tryCatch({
+# OFFLINE_RUN forces haver_available=FALSE so the cached-CSV path is taken.
+haver_available <- if (OFFLINE_RUN) FALSE else tryCatch({
   if (!requireNamespace("Haver", quietly = TRUE)) stop("not installed")
   suppressWarnings(library(Haver, quietly = TRUE))
   haver.direct("on")
@@ -182,6 +181,8 @@ haver_available <- tryCatch({
 
 if (haver_available) {
   log_msg("INFO", "Haver Analytics connection: AVAILABLE")
+} else if (OFFLINE_RUN) {
+  log_msg("INFO", "Haver Analytics connection: SKIPPED (OFFLINE_RUN=TRUE)")
 } else {
   log_msg("WARN", "Haver Analytics connection: UNAVAILABLE -- will use cached CSV files")
 }
@@ -252,6 +253,45 @@ tryCatch({
   log_msg("FAIL", paste("Step 3 failed: data processing --", e$message))
   stop("Pipeline cannot proceed: data processing step failed")
 })
+
+# ==============================================================================
+# STEP 3.5: REFRESH USITC DATAWEB NAICS PULL
+# ==============================================================================
+# Pulls customs value and calculated duties at NAICS-3 from DataWeb's API and
+# writes input/customs_duties_by_naics.csv. Replaces the previously-manual
+# "USITC - Customs and Duties - <vintage>.xlsx" download. If DataWeb is
+# unavailable, the script exits non-zero and we fall back to the cached CSV
+# (which the employment index will still consume).
+#
+# Skipped when OFFLINE_RUN=TRUE.
+
+dataweb_script <- here("R", "pull_dataweb_naics.R")
+if (OFFLINE_RUN) {
+  log_msg("SKIP", "Step 3.5 skipped: OFFLINE_RUN=TRUE (using cached customs_duties_by_naics.csv)")
+} else if (!file.exists(dataweb_script)) {
+  log_msg("SKIP", "Step 3.5 skipped: pull_dataweb_naics.R not found")
+} else {
+  log_msg("INFO", "Step 3.5: Refreshing USITC DataWeb NAICS pull...")
+  rscript_bin <- file.path(R.home("bin"),
+                            if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript")
+  # stdout="" lets the pull script's progress messages stream live to the
+  # console so the user sees per-year progress (and any retry/backoff hints).
+  exit_code <- tryCatch(
+    system2(rscript_bin, args = dataweb_script,
+            stdout = "", stderr = ""),
+    error = function(e) {
+      log_msg("WARN", paste("Step 3.5 transport error:", conditionMessage(e)))
+      -1L
+    }
+  )
+  if (is.null(exit_code)) exit_code <- 0L
+  if (identical(exit_code, 0L)) {
+    log_msg("OK", "Step 3.5 completed: DataWeb NAICS data refreshed")
+  } else {
+    log_msg("WARN", paste0("Step 3.5 exited non-zero (", exit_code,
+                            "); pipeline continues with cached CSV if present"))
+  }
+}
 
 # ==============================================================================
 # STEP 4: RUN EMPLOYMENT INDEX CALCULATION

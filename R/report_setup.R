@@ -482,15 +482,27 @@ if (ipi_available) {
   IPI_EFF_SHARE_DUR <- ipi_eff_shares$effective_import_share[ipi_eff_shares$variant == "durables"]
 }
 
-# Import content shares for passthrough calculations (fallback to defaults if NA or missing)
+# Import content shares for passthrough calculations.
+# Primary source: ipi_eff_shares (computed from BEA I-O + Haver category totals
+# in import_price_index.R). Fallback values are conservative round numbers
+# corresponding to roughly the BEA I-O aggregate import shares for these PCE
+# categories pre-2025 (~25% core goods, ~30% durables) -- used only when the
+# IPI pipeline output is unavailable.
+DEFAULT_IMPORT_SHARE_CORE_GOODS <- 0.25
+DEFAULT_IMPORT_SHARE_DURABLES   <- 0.30
+
 if (ipi_available) {
   IMPORT_SHARE_CORE_GOODS <- ipi_eff_shares$effective_import_share[ipi_eff_shares$variant == "core_goods"]
   IMPORT_SHARE_DURABLES <- ipi_eff_shares$effective_import_share[ipi_eff_shares$variant == "durables"]
-  if (length(IMPORT_SHARE_CORE_GOODS) == 0 || is.na(IMPORT_SHARE_CORE_GOODS)) IMPORT_SHARE_CORE_GOODS <- 0.25
-  if (length(IMPORT_SHARE_DURABLES) == 0 || is.na(IMPORT_SHARE_DURABLES)) IMPORT_SHARE_DURABLES <- 0.30
+  if (length(IMPORT_SHARE_CORE_GOODS) == 0 || is.na(IMPORT_SHARE_CORE_GOODS)) {
+    IMPORT_SHARE_CORE_GOODS <- DEFAULT_IMPORT_SHARE_CORE_GOODS
+  }
+  if (length(IMPORT_SHARE_DURABLES) == 0 || is.na(IMPORT_SHARE_DURABLES)) {
+    IMPORT_SHARE_DURABLES <- DEFAULT_IMPORT_SHARE_DURABLES
+  }
 } else {
-  IMPORT_SHARE_CORE_GOODS <- 0.25
-  IMPORT_SHARE_DURABLES <- 0.30
+  IMPORT_SHARE_CORE_GOODS <- DEFAULT_IMPORT_SHARE_CORE_GOODS
+  IMPORT_SHARE_DURABLES   <- DEFAULT_IMPORT_SHARE_DURABLES
 }
 
 # ==============================================================================
@@ -1435,13 +1447,15 @@ mar_imports_excess <- if (nrow(mar_2025) > 0 && nrow(dec_2024_trade) > 0) {
 post_apr <- trade_pre_trend %>% filter(date >= "2025-04-01")
 post_apr_avg_imports_vs_trend <- if (nrow(post_apr) > 0) mean(post_apr$imports_vs_trend, na.rm = TRUE) else NA
 
-trade_latest <- trade_pre_trend %>% filter(date == max(date))
+trade_latest <- trade_pre_trend %>%
+  filter(!is.na(imports_real), !is.na(exports_real)) %>%
+  filter(date == max(date))
 trade_latest_date <- format(trade_latest$date, "%B %Y")
 exports_latest_vs_trend <- trade_latest$exports_vs_trend
 exports_dir <- if (!is.na(exports_latest_vs_trend) && exports_latest_vs_trend > 0) "above" else "below"
 
 cum_gap <- trade_pre_trend %>%
-  filter(date >= "2024-12-01") %>%
+  filter(date >= "2024-12-01", !is.na(imports_real)) %>%
   mutate(
     monthly_gap = (imports_real - imports_trend) * imports_deflator / 1000,
     cumulative_gap = cumsum(monthly_gap)
@@ -1465,7 +1479,7 @@ exports_trend_data <- trade_with_trend %>%
          vs_trend = (exports_real / exports_trend - 1) * 100)
 
 cumulative_trade <- trade_with_trend %>%
-  filter(date >= "2024-12-01") %>%
+  filter(date >= "2024-12-01", !is.na(imports_real)) %>%
   mutate(
     imports_gap = (imports_real_2025 - imports_trend_2025) / 1000,
     cumul_imports = cumsum(imports_gap)

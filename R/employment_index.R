@@ -53,8 +53,11 @@ OUTPUT_DIR <- here("output")
 LOG_DIR    <- here("logs")
 
 # Canonical list of required input files (used by run_all.R for pre-flight checks)
+# customs_duties_by_naics.csv is produced by R/pull_dataweb_naics.R from the
+# USITC DataWeb API (replaces the manually-downloaded "USITC - Customs and
+# Duties - <vintage>.xlsx" file).
 employment_index_required_inputs <- function() {
-  c("USITC - Customs and Duties - January 2026.xlsx",
+  c("customs_duties_by_naics.csv",
     "BEA - Import Matrix, Before Redefinitions - Summary - 2024.xlsx",
     "BEA - The Use of Commodities by Industry - Summary - 2024.xlsx",
     "x_codes.csv",
@@ -96,68 +99,41 @@ log_msg("INFO", "-" %>% rep(60) %>% paste(collapse = ""))
 log_msg("INFO", "Step 1: Loading Tariff Data from USITC")
 log_msg("INFO", "-" %>% rep(60) %>% paste(collapse = ""))
 
-usitc_file <- file.path(INPUT_DIR, "USITC - Customs and Duties - January 2026.xlsx")
+naics_data_file <- file.path(INPUT_DIR, "customs_duties_by_naics.csv")
 
-# 1(a) Import data from both sheets
-log_msg("INFO", paste("Reading from:", usitc_file))
+# 1(a) Read pre-pulled NAICS customs/duties (from R/pull_dataweb_naics.R)
+log_msg("INFO", paste("Reading from:", naics_data_file))
 
-customs_value <- read_excel(usitc_file, sheet = "Customs Value") %>%
-  dplyr::select(
-    year = Year,
-    month = Month,
-    naics = `NAIC Number`,
-    description = Description,
-    customs_value = `Customs Value`
-  ) %>%
+if (!file.exists(naics_data_file)) {
+  stop("Required input not found: ", naics_data_file,
+       "\n  Run R/pull_dataweb_naics.R first to populate it from USITC DataWeb.",
+       call. = FALSE)
+}
+
+# Belt-and-suspenders year filter: pull_dataweb_naics.R defaults to fetching
+# 2025+, but a custom --years invocation could include earlier years that
+# downstream code (e.g., tau_c_2025 baseline) is not designed to absorb.
+tariff_data <- readr::read_csv(naics_data_file, show_col_types = FALSE,
+                                col_types = readr::cols(
+                                  year = readr::col_integer(),
+                                  month = readr::col_integer(),
+                                  naics = readr::col_character(),
+                                  customs_value = readr::col_double(),
+                                  calculated_duties = readr::col_double(),
+                                  .default = readr::col_character()
+                                )) %>%
+  filter(year >= 2025) %>%
   mutate(
-    year = as.integer(year),
-    month = as.integer(month),
-    naics = as.character(naics),
-    # Convert to numeric with logging of conversion failures
-    customs_value = safe_as_numeric(customs_value, "customs_value", log_msg)
-  ) %>%
-  filter(!is.na(customs_value))
-
-log_msg("INFO", paste("Read Customs Value:", nrow(customs_value), "rows"))
-
-calculated_duties <- read_excel(usitc_file, sheet = "Calculated Duties") %>%
-  dplyr::select(
-    year = Year,
-    month = Month,
-    naics = `NAIC Number`,
-    calculated_duties = `Calculated Duties`
-  ) %>%
-  mutate(
-    year = as.integer(year),
-    month = as.integer(month),
-    naics = as.character(naics),
-    # Convert to numeric with logging of conversion failures
-    calculated_duties = safe_as_numeric(calculated_duties, "calculated_duties", log_msg)
-  ) %>%
-  filter(!is.na(calculated_duties))
-
-log_msg("INFO", paste("Read Calculated Duties:", nrow(calculated_duties), "rows"))
-
-# 1(b) Keep 2025 data only
-customs_value_2025 <- customs_value %>% filter(year == 2025)
-calculated_duties_2025 <- calculated_duties %>% filter(year == 2025)
-
-log_msg("INFO", paste("Filtered to 2025: Customs Value =", nrow(customs_value_2025),
-                      "rows, Duties =", nrow(calculated_duties_2025), "rows"))
-
-# 1(c) Merge together by year, month, and NAICS
-tariff_data <- customs_value_2025 %>%
-  left_join(
-    calculated_duties_2025,
-    by = c("year", "month", "naics")
-  ) %>%
-  mutate(
+    customs_value = replace_na(customs_value, 0),
     calculated_duties = replace_na(calculated_duties, 0)
   )
 
-log_msg("INFO", paste("Merged tariff data:", nrow(tariff_data), "rows"))
+log_msg("INFO", paste("Tariff data:", nrow(tariff_data), "rows"))
 log_msg("INFO", paste("  Unique NAICS codes:", length(unique(tariff_data$naics))))
-log_msg("INFO", paste("  Months available:", paste(sort(unique(tariff_data$month)), collapse = ", ")))
+log_msg("INFO", paste("  Year-months available:",
+                      paste(sort(unique(paste0(tariff_data$year, "-",
+                                               sprintf("%02d", tariff_data$month)))),
+                            collapse = ", ")))
 
 # ==============================================================================
 # SECTION 3: LOAD IMPORT MATRIX (x_{c,j})
@@ -609,8 +585,9 @@ log_msg("INFO", "-" %>% rep(60) %>% paste(collapse = ""))
 log_msg("INFO", "Step 5: Calculating Tariff Rates")
 log_msg("INFO", "-" %>% rep(60) %>% paste(collapse = ""))
 
-# 5(a) Full 2025 values: duties / customs value for all of 2025
+# 5(a) Full 2025 values: duties / customs value for calendar 2025 only
 tau_c_2025 <- tariff_by_bea %>%
+  filter(year == 2025) %>%
   group_by(bea_code) %>%
   summarize(
     customs_value_2025 = sum(customs_value, na.rm = TRUE),
@@ -626,12 +603,16 @@ log_msg("INFO", paste("  Mean rate:", round(mean(tau_c_2025$tau_c_2025) * 100, 2
 log_msg("INFO", paste("  Weighted mean:",
                       round(sum(tau_c_2025$duties_2025) / sum(tau_c_2025$customs_value_2025) * 100, 2), "%"))
 
-# 5(b) Most recent 2025 values: duties / customs value for max month in 2025
-max_month <- max(tariff_by_bea$month)
-log_msg("INFO", paste("Most recent month in data:", max_month))
+# 5(b) Most recent month in data: latest (year, month) tuple across all years present
+recent_ym <- tariff_by_bea %>%
+  summarize(ym = max(year * 100 + month)) %>% pull(ym)
+recent_year  <- recent_ym %/% 100
+recent_month <- recent_ym %%  100
+log_msg("INFO", paste0("Most recent month in data: ", recent_year, "-",
+                       sprintf("%02d", recent_month)))
 
 tau_c_recent <- tariff_by_bea %>%
-  filter(month == max_month) %>%
+  filter(year == recent_year, month == recent_month) %>%
   dplyr::select(bea_code, customs_value_recent = customs_value, duties_recent = calculated_duties) %>%
   mutate(
     tau_c_recent = safe_divide(duties_recent, customs_value_recent, default = 0)
@@ -640,8 +621,8 @@ tau_c_recent <- tariff_by_bea %>%
 log_msg("INFO", paste("Recent month tariff rates:", nrow(tau_c_recent), "BEA codes"))
 log_msg("INFO", paste("  Mean rate:", round(mean(tau_c_recent$tau_c_recent) * 100, 2), "%"))
 
-# 5(c) June 2025 values: duties / customs value for month == 6
-june_data <- tariff_by_bea %>% filter(month == 6)
+# 5(c) June 2025 values: duties / customs value for June 2025 specifically
+june_data <- tariff_by_bea %>% filter(year == 2025, month == 6)
 
 if (nrow(june_data) > 0) {
   tau_c_june <- june_data %>%

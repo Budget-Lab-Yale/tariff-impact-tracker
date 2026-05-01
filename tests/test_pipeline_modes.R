@@ -20,10 +20,17 @@ passed <- 0
 failed <- 0
 
 test <- function(description, expr) {
-  result <- tryCatch(expr, error = function(e) FALSE)
+  err_msg <- NULL
+  result <- tryCatch(expr, error = function(e) {
+    err_msg <<- conditionMessage(e)
+    FALSE
+  })
   if (isTRUE(result)) {
     cat(sprintf("  PASS: %s\n", description))
     passed <<- passed + 1
+  } else if (!is.null(err_msg)) {
+    cat(sprintf("  FAIL: %s -- ERROR: %s\n", description, err_msg))
+    failed <<- failed + 1
   } else {
     cat(sprintf("  FAIL: %s\n", description))
     failed <<- failed + 1
@@ -71,23 +78,28 @@ cat("\n")
 # ==============================================================================
 cat("--- Test 2: Employment index input files ---\n")
 
-# Source the canonical input list from the script
+# Source the canonical input list from employment_index.R rather than
+# duplicating it here. Sourcing in a child env avoids running the script's
+# main body (which would trigger Haver pulls); we just need the function defs.
 source(here("R", "utils.R"))
+emp_env <- new.env()
 tryCatch({
-  # Parse just the function definition without running the script
-  emp_inputs <- c(
-    "USITC - Customs and Duties - January 2026.xlsx",
-    "BEA - Import Matrix, Before Redefinitions - Summary - 2024.xlsx",
-    "BEA - The Use of Commodities by Industry - Summary - 2024.xlsx",
-    "x_codes.csv",
-    "naics_to_bea_crosswalk.csv"
-  )
+  # Extract just the required-inputs function from employment_index.R by
+  # parsing the file and evaluating only that function definition.
+  emp_lines <- readLines(here("R", "employment_index.R"), warn = FALSE)
+  fn_start <- grep("^employment_index_required_inputs <- function\\(\\)",
+                    emp_lines)[1]
+  fn_end   <- fn_start + which(grepl("^\\}\\s*$", emp_lines[fn_start:length(emp_lines)]))[1] - 1
+  eval(parse(text = paste(emp_lines[fn_start:fn_end], collapse = "\n")),
+       envir = emp_env)
+  emp_inputs <- emp_env$employment_index_required_inputs()
 
   for (f in emp_inputs) {
     test(paste("employment input exists:", f), file.exists(here("input", f)))
   }
 }, error = function(e) {
-  cat(sprintf("  SKIP: could not check employment inputs: %s\n", e$message))
+  cat(sprintf("  SKIP: could not extract employment_index_required_inputs(): %s\n",
+              e$message))
 })
 
 cat("\n")

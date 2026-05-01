@@ -18,6 +18,34 @@
 DAYS_PER_MONTH <- 365.25 / 12
 
 # ==============================================================================
+# ANALYSIS-WINDOW CONSTANTS
+# ==============================================================================
+# Single source of truth for the trend-estimation and forecast-anchor windows
+# used throughout the project. Function defaults below reference these so that
+# rolling the baseline forward (e.g., to a 2025 anchor) is a one-place edit.
+#
+# Update cadence: revisit annually when the calendar year of "actuals" changes,
+# or when a structural break (policy regime, methodology revision) requires
+# re-anchoring. Bumping these requires re-running the full pipeline.
+
+# Pre-tariff trend estimation window (used by calc_log_linear_trend and the
+# local-projection family). End-anchor is the last full month of pre-tariff
+# data; the LP/log-linear models forecast from this point forward.
+TREND_ESTIMATION_END  <- "2024-12-31"
+TREND_BASE_DATE       <- "2024-12-01"
+TREND_FORECAST_START  <- "2025-01-01"
+
+# Markov-switching estimation window. Lower bound = start of usable monthly
+# data after seasonal de-meaning; upper bound mirrors TREND_ESTIMATION_END.
+MS_MODEL_START        <- "1996-04-01"
+MS_MODEL_END          <- TREND_ESTIMATION_END
+
+# Forecast-anchor year for MS regime probabilities -- when projecting state
+# probabilities into the post-2024 window, we anchor on the average of this
+# year's smoothed probabilities. Should equal year(TREND_ESTIMATION_END).
+MS_FORECAST_ANCHOR_YEAR <- 2024L
+
+# ==============================================================================
 # LOGGING FUNCTIONS
 # ==============================================================================
 
@@ -137,9 +165,13 @@ pull_haver <- function(codes, frequency = "monthly", start_date, end_date = NULL
 #'
 #' @param numerator Numeric vector
 #' @param denominator Numeric vector
-#' @param default Value to return when division is undefined (default: 0)
+#' @param default Value to return when division is undefined. Defaults to
+#'   NA_real_ so that "undefined" stays distinguishable from "genuinely zero"
+#'   in downstream code. Pass `default = 0` explicitly when zero is the
+#'   semantically correct fallback (e.g., share/rate calculations where a
+#'   missing-data row should drop out of weighted aggregates).
 #' @return Numeric vector with safe division results
-safe_divide <- function(numerator, denominator, default = 0) {
+safe_divide <- function(numerator, denominator, default = NA_real_) {
   result <- numerator / denominator
   result[is.na(denominator) | denominator == 0 | !is.finite(result)] <- default
   result
@@ -152,22 +184,20 @@ safe_divide <- function(numerator, denominator, default = 0) {
 #' @param log_fn Optional logging function
 #' @return List with $valid and $invalid character vectors
 validate_haver_codes <- function(codes, test_start = "2024-01-01", log_fn = NULL) {
-  valid_codes <- c()
-  invalid_codes <- c()
-
-  for (code in codes) {
+  # Classify each code as "valid" or "invalid" by mapping over the input.
+  # Returning the verdict from each iteration avoids the <<- side-effect
+  # closure pattern this function used to rely on.
+  verdict <- vapply(codes, function(code) {
     tryCatch({
-      test <- Haver::haver.data(codes = code, frequency = "monthly", start = test_start,
+      test <- Haver::haver.data(codes = code, frequency = "monthly",
+                                start = test_start,
                                 aggmode = "relaxed", eop.dates = TRUE)
-      if (!is.null(test) && nrow(test) > 0) {
-        valid_codes <- c(valid_codes, code)
-      } else {
-        invalid_codes <- c(invalid_codes, code)
-      }
-    }, error = function(e) {
-      invalid_codes <<- c(invalid_codes, code)
-    })
-  }
+      if (!is.null(test) && nrow(test) > 0) "valid" else "invalid"
+    }, error = function(e) "invalid")
+  }, character(1))
+
+  valid_codes <- codes[verdict == "valid"]
+  invalid_codes <- codes[verdict == "invalid"]
 
   if (!is.null(log_fn)) {
     log_fn("INFO", paste("Valid codes:", length(valid_codes), "of", length(codes)))
@@ -216,17 +246,17 @@ safe_as_numeric <- function(x, col_name = "unknown", log_fn = NULL) {
 #' @param df Data frame with date and value columns
 #' @param value_col Name of the value column to model
 #' @param estimation_start Start date for model estimation (default: "2015-01-01")
-#' @param estimation_end End date for model estimation (default: "2024-12-31")
-#' @param base_date Date to use as index base (value = 100) (default: "2024-12-01")
-#' @param forecast_start Start of forecast period for flagging (default: "2025-01-01")
+#' @param estimation_end End date for model estimation (default: TREND_ESTIMATION_END)
+#' @param base_date Date to use as index base (value = 100) (default: TREND_BASE_DATE)
+#' @param forecast_start Start of forecast period for flagging (default: TREND_FORECAST_START)
 #' @param conf_level Confidence level for intervals (default: 0.90)
 #' @return Data frame with trend, confidence intervals, and deviations; model summary as attribute
 
 calc_log_linear_trend <- function(df, value_col,
                                    estimation_start = "2015-01-01",
-                                   estimation_end = "2024-12-31",
-                                   base_date = "2024-12-01",
-                                   forecast_start = "2025-01-01",
+                                   estimation_end = TREND_ESTIMATION_END,
+                                   base_date = TREND_BASE_DATE,
+                                   forecast_start = TREND_FORECAST_START,
                                    conf_level = 0.90) {
 
   # 1. Create estimation dataset with log transformation
@@ -407,8 +437,8 @@ create_recession_dummy <- function(dates) {
 #' @return List with regime probabilities and model object, or NULL if fitting fails
 
 fit_markov_switching_mswm <- function(df, value_col,
-                                       model_start = "1996-04-01",
-                                       model_end = "2024-12-31") {
+                                       model_start = MS_MODEL_START,
+                                       model_end = MS_MODEL_END) {
 
   if (!requireNamespace("MSwM", quietly = TRUE)) {
     warning("MSwM package not available. Install with: install.packages('MSwM')")
@@ -464,15 +494,15 @@ fit_markov_switching_mswm <- function(df, value_col,
       pr_state = probs
     )
 
-    # Calculate 2024 average for forecast periods
-    avg_2024 <- prob_df %>%
-      dplyr::filter(lubridate::year(date) == 2024) %>%
+    # Anchor regime probability for forecast periods (avg over the anchor year)
+    avg_anchor_year <- prob_df %>%
+      dplyr::filter(lubridate::year(date) == MS_FORECAST_ANCHOR_YEAR) %>%
       dplyr::summarize(mean_pr = mean(pr_state, na.rm = TRUE)) %>%
       dplyr::pull(mean_pr)
 
     return(list(
       prob_df = prob_df,
-      avg_2024 = avg_2024,
+      avg_anchor_year = avg_anchor_year,
       model = ms_model,
       method = "MSwM"
     ))
@@ -495,8 +525,8 @@ fit_markov_switching_mswm <- function(df, value_col,
 #' @return List with regime probabilities and model object, or NULL if fitting fails
 
 fit_markov_switching_depmix <- function(df, value_col,
-                                         model_start = "1996-04-01",
-                                         model_end = "2024-12-31") {
+                                         model_start = MS_MODEL_START,
+                                         model_end = MS_MODEL_END) {
 
   if (!requireNamespace("depmixS4", quietly = TRUE)) {
     warning("depmixS4 package not available. Install with: install.packages('depmixS4')")
@@ -559,15 +589,15 @@ fit_markov_switching_depmix <- function(df, value_col,
       pr_state = pr_state
     )
 
-    # Calculate 2024 average for forecast periods
-    avg_2024 <- prob_df %>%
-      dplyr::filter(lubridate::year(date) == 2024) %>%
+    # Anchor regime probability for forecast periods (avg over the anchor year)
+    avg_anchor_year <- prob_df %>%
+      dplyr::filter(lubridate::year(date) == MS_FORECAST_ANCHOR_YEAR) %>%
       dplyr::summarize(mean_pr = mean(pr_state, na.rm = TRUE)) %>%
       dplyr::pull(mean_pr)
 
     return(list(
       prob_df = prob_df,
-      avg_2024 = avg_2024,
+      avg_anchor_year = avg_anchor_year,
       model = mod_fit,
       method = "depmixS4"
     ))
@@ -586,10 +616,10 @@ fit_markov_switching_depmix <- function(df, value_col,
 #' @inheritParams local_projection_trend_plain
 
 local_projection_trend_mswm <- function(df, value_col,
-                                         model_start = "1996-04-01",
-                                         model_end = "2024-12-31",
-                                         base_date = "2024-12-01",
-                                         forecast_start = "2025-01-01",
+                                         model_start = MS_MODEL_START,
+                                         model_end = MS_MODEL_END,
+                                         base_date = TREND_BASE_DATE,
+                                         forecast_start = TREND_FORECAST_START,
                                          horizon = 6,
                                          n_lags = 12,
                                          conf_level = 0.90) {
@@ -611,10 +641,10 @@ local_projection_trend_mswm <- function(df, value_col,
 #' @inheritParams local_projection_trend_plain
 
 local_projection_trend_depmix <- function(df, value_col,
-                                           model_start = "1996-04-01",
-                                           model_end = "2024-12-31",
-                                           base_date = "2024-12-01",
-                                           forecast_start = "2025-01-01",
+                                           model_start = MS_MODEL_START,
+                                           model_end = MS_MODEL_END,
+                                           base_date = TREND_BASE_DATE,
+                                           forecast_start = TREND_FORECAST_START,
                                            horizon = 6,
                                            n_lags = 12,
                                            conf_level = 0.90) {
@@ -655,10 +685,10 @@ local_projection_trend_depmix <- function(df, value_col,
 #' @return Data frame with trend, confidence intervals, and deviations
 
 local_projection_trend_plain <- function(df, value_col,
-                                          model_start = "1996-04-01",
-                                          model_end = "2024-12-31",
-                                          base_date = "2024-12-01",
-                                          forecast_start = "2025-01-01",
+                                          model_start = MS_MODEL_START,
+                                          model_end = MS_MODEL_END,
+                                          base_date = TREND_BASE_DATE,
+                                          forecast_start = TREND_FORECAST_START,
                                           horizon = 12,
                                           n_lags = 12,
                                           conf_level = 0.90,
@@ -718,11 +748,11 @@ local_projection_trend_plain <- function(df, value_col,
     if (is.null(ms_result)) {
       warning("Markov-switching failed. Using constant regime probability = 0.5")
       df$pr_state <- 0.5
-      avg_2024_pr <- 0.5
+      anchor_pr <- 0.5
     } else {
       df <- df %>% dplyr::left_join(ms_result$prob_df, by = "date")
-      avg_2024_pr <- ms_result$avg_2024
-      df$pr_state[is.na(df$pr_state)] <- avg_2024_pr
+      anchor_pr <- ms_result$avg_anchor_year
+      df$pr_state[is.na(df$pr_state)] <- anchor_pr
     }
   }
 
@@ -877,7 +907,7 @@ local_projection_trend_plain <- function(df, value_col,
     nw_lag = nw_lag,
     T_obs = T_obs,
     ms_method = ms_method,
-    ms_result = if (!is.null(ms_result)) list(avg_2024 = ms_result$avg_2024,
+    ms_result = if (!is.null(ms_result)) list(avg_anchor_year = ms_result$avg_anchor_year,
                                                method = ms_result$method) else NULL,
     horizon_models = lapply(horizon_results, function(hr) {
       if (is.null(hr)) return(NULL)
@@ -954,10 +984,10 @@ local_projection_trend_plain <- function(df, value_col,
 #'   estimation details for each horizon.
 
 hamilton_filter_trend <- function(df, value_col,
-                                  model_start = "1996-04-01",
-                                  model_end = "2024-12-31",
-                                  base_date = "2024-12-01",
-                                  forecast_start = "2025-01-01",
+                                  model_start = MS_MODEL_START,
+                                  model_end = MS_MODEL_END,
+                                  base_date = TREND_BASE_DATE,
+                                  forecast_start = TREND_FORECAST_START,
                                   max_h = 24,
                                   p = 12,
                                   conf_level = 0.90,

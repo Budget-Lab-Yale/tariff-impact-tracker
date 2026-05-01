@@ -48,8 +48,10 @@ dataStyleChar <- createStyle(fontName = "Aptos Narrow", fontSize = 11,
                              halign = "center")
 tocLinkStyle  <- createStyle(fontName = "Aptos Narrow", fontSize = 11)
 
-# Track sheet info for Data TOC
-sheet_info <- tibble::tibble(sheet_name = character(), title = character())
+# Track sheet info for Data TOC. Uses an environment instead of <<- so the
+# accumulator state is explicit and isolated from the global scope.
+.sheet_info_env <- new.env(parent = emptyenv())
+.sheet_info_env$info <- tibble::tibble(sheet_name = character(), title = character())
 
 # Helper: add a data sheet in TBL house style (7-row header structure)
 add_tbl_sheet <- function(wb, sheet_name, data, title, subtitle, source,
@@ -115,7 +117,7 @@ add_tbl_sheet <- function(wb, sheet_name, data, title, subtitle, source,
 
     setColWidths(wb, sheet_name, cols = 1:ncols, widths = "auto")
 
-    sheet_info <<- bind_rows(sheet_info, tibble::tibble(
+    .sheet_info_env$info <- bind_rows(.sheet_info_env$info, tibble::tibble(
       sheet_name = sheet_name,
       title = title
     ))
@@ -496,6 +498,7 @@ writeData(wb, "Data TOC", "Tables and Figures",
           startRow = 5, startCol = 1)
 addStyle(wb, "Data TOC", titleStyle, rows = 5, cols = 1)
 
+sheet_info <- .sheet_info_env$info
 for (i in seq_len(nrow(sheet_info))) {
   link_formula <- paste0("HYPERLINK(\"#'", sheet_info$sheet_name[i],
                          "'!A1\", \"", sheet_info$title[i], "\")")
